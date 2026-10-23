@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const { URL } = require('url');
 
 const ROOT = __dirname;
-const DATA_DIR = path.join(ROOT, 'data');
+const DATA_DIR = process.env.VERCEL ? path.join('/tmp', 'data') : path.join(ROOT, 'data');
 const DB_FILE = path.join(DATA_DIR, 'sanjeevani.json');
 const PORT = Number(process.env.PORT || 4173);
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.jpeg': 'image/jpeg', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml' };
@@ -96,6 +96,14 @@ function seedDatabase() {
 function loadDatabase() {
   fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(DB_FILE)) {
+    const sourceFile = path.join(ROOT, 'data', 'sanjeevani.json');
+    if (fs.existsSync(sourceFile)) {
+      try {
+        const content = fs.readFileSync(sourceFile, 'utf8');
+        fs.writeFileSync(DB_FILE, content);
+        return JSON.parse(content);
+      } catch {}
+    }
     const fresh = seedDatabase();
     fs.writeFileSync(DB_FILE, JSON.stringify(fresh, null, 2));
     return fresh;
@@ -371,5 +379,9 @@ const server = http.createServer(async (req, res) => {
   catch (error) { console.error(error); if (!res.headersSent) fail(res, 500, 'Unexpected server error'); }
 });
 
-setInterval(() => expireOffers(), 5000);
-server.listen(PORT, () => console.log(`Sanjeevani server running at http://localhost:${PORT}`));
+if (!process.env.VERCEL) {
+  setInterval(() => expireOffers(), 5000);
+  server.listen(PORT, () => console.log(`Sanjeevani server running at http://localhost:${PORT}`));
+}
+
+module.exports = server;
