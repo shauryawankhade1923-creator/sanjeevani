@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f8f4" />
+    <title>Sanjeevani — Live aid operations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3kBq0jG4v7Z0j0t1J5w5q5u6n7r8=" crossorigin="" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="auth-screen"></div>
+    <div class="app-shell" id="app-shell" hidden>
+      <aside class="sidebar">
+        <div class="brand-lockup">
+          <img class="brand-logo" src="sanjeevani-logo.jpeg" alt="Sanjeevani logo" />
+          <div class="brand-tagline">Delivering What Matters When It Matters.</div>
+        </div>
+
+        <div class="workspace-switcher">
+          <div class="workspace-avatar">MC</div>
+          <div class="workspace-copy">
+            <strong>Metro Civic Network</strong>
+            <span>Operations team</span>
+          </div>
+          <button class="icon-button tiny" aria-label="Switch workspace">⌄</button>
+        </div>
+
+        <div class="sidebar-label">Workspace</div>
+        <nav class="sidebar-nav" aria-label="Primary navigation">
+          <button class="nav-item active" data-view="operations"><span class="nav-icon">⌁</span><span>Operations</span><span class="nav-count">12</span></button>
+          <button class="nav-item" data-view="dispatch"><span class="nav-icon">↗</span><span>Dispatch queue</span><span class="nav-count amber">4</span></button>
+          <button class="nav-item" data-view="shelters"><span class="nav-icon">⌂</span><span>Shelters</span></button>
+          <button class="nav-item" data-view="riders"><span class="nav-icon">◌</span><span>Riders</span><span class="live-dot"></span></button>
+          <button class="nav-item" data-view="impact"><span class="nav-icon">✦</span><span>Impact</span></button>
+        </nav>
+
+        <div class="sidebar-label sidebar-label-spaced">Quick actions</div>
+        <div class="quick-action-list">
+          <button class="quick-action" id="sidebar-add"><span class="quick-icon green">＋</span><span>Log a donation</span></button>
+          <button class="quick-action" id="sidebar-scenario"><span class="quick-icon orange">◈</span><span>Open scenario lab</span></button>
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="system-card">
+            <div class="system-card-top"><span class="status-dot"></span><span>Network live</span><span class="latency">68ms</span></div>
+            <div class="system-meter"><span></span></div>
+            <div class="system-card-copy">All coordinators synced · 24 riders online</div>
+          </div>
+          <button class="profile-row"><div class="profile-avatar">RK</div><div><strong>Riya Kapoor</strong><span>Lead coordinator</span></div><span class="more">•••</span></button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="breadcrumbs"><span>Metro Civic Network</span><span class="crumb-separator">/</span><strong id="current-view-label">Operations</strong></div>
+          <div class="topbar-actions">
+            <div class="simulation-pill"><span class="pulse-ring"></span><span>Simulation clock</span><strong id="clock-time">20:24</strong></div>
+            <button class="icon-button" id="notification-button" aria-label="Notifications">♧<span class="notification-badge">3</span></button>
+            <button class="avatar-button">RK</button>
+          </div>
+        </header>
+
+          <div class="content-wrap" id="workspace-root">
+          <section class="page-intro">
+            <div>
+              <div class="eyebrow"><span class="eyebrow-line"></span> Friday, 23 October 2026 · Evening shift</div>
+              <h1>Good aid should<br /><em>never wait.</em></h1>
+              <p>Keep every handoff safe, visible, and moving before the clock runs out.</p>
+            </div>
+            <div class="intro-actions">
+              <button class="secondary-button" id="advance-time"><span>↝</span> Advance 10 min</button>
+              <button class="primary-button" id="add-batch"><span>＋</span> Log a donation</button>
+            </div>
+          </section>
+
+          <section class="metric-grid" aria-label="Network summary">
+            <article class="metric-card accent-lime">
+              <div class="metric-card-header"><span class="metric-label">Active shipments</span><span class="metric-icon">↗</span></div>
+              <div class="metric-value" id="active-shipments">08</div>
+              <div class="metric-foot"><span class="trend up">↑ 18%</span><span>vs. last shift</span></div>
+            </article>
+            <article class="metric-card accent-orange">
+              <div class="metric-card-header"><span class="metric-label">Needs attention</span><span class="metric-icon">!</span></div>
+              <div class="metric-value" id="attention-count">04</div>
+              <div class="metric-foot"><span class="trend warning">2 urgent</span><span>within 30 min</span></div>
+            </article>
+            <article class="metric-card accent-blue">
+              <div class="metric-card-header"><span class="metric-label">Meals rescued</span><span class="metric-icon">✦</span></div>
+              <div class="metric-value" id="meals-rescued">1,248</div>
+              <div class="metric-foot"><span class="trend up">↑ 26%</span><span>this week</span></div>
+            </article>
+            <article class="metric-card accent-purple">
+              <div class="metric-card-header"><span class="metric-label">Shelter demand</span><span class="metric-icon">⌂</span></div>
+              <div class="metric-value" id="shelter-demand">76<span class="metric-unit">%</span></div>
+              <div class="metric-foot"><span class="trend neutral">392 servings</span><span>still open</span></div>
+            </article>
+          </section>
+
+          <div class="dashboard-grid">
+            <section class="dispatch-panel panel-card" id="operations-view">
+              <div class="panel-heading">
+                <div>
+                  <div class="section-kicker">Live dispatch board <span class="live-dot"></span></div>
+                  <h2>Every handoff, in one view</h2>
+                </div>
+                <button class="filter-button" id="filter-button">Filter <span>⌄</span></button>
+              </div>
+              <div class="filter-row" id="filter-row">
+                <button class="filter-chip active" data-filter="all">All <span id="all-count">8</span></button>
+                <button class="filter-chip" data-filter="critical">Critical <span id="critical-count">3</span></button>
+                <button class="filter-chip" data-filter="transit">In transit <span id="transit-count">3</span></button>
+                <button class="filter-chip" data-filter="action">Needs action <span id="action-count">3</span></button>
+              </div>
+              <div class="operation-list" id="operation-list"></div>
+              <button class="view-all-button" id="view-all">View all dispatches <span>→</span></button>
+            </section>
+
+            <aside class="right-rail">
+              <section class="pulse-card panel-card">
+                <div class="panel-heading compact">
+                  <div><div class="section-kicker">Network pulse</div><h2>Tonight is moving well</h2></div>
+                  <span class="pulse-score">92<span>/100</span></span>
+                </div>
+                <div class="pulse-chart" aria-label="Network performance chart">
+                  <div class="chart-grid"><span></span><span></span><span></span></div>
+                  <div class="chart-bars"><i style="height:42%"></i><i style="height:55%"></i><i style="height:47%"></i><i style="height:68%"></i><i style="height:61%"></i><i style="height:78%"></i><i style="height:73%"></i><i style="height:88%"></i><i style="height:81%"></i><i style="height:94%"></i><i style="height:90%"></i><i style="height:96%"></i></div>
+                  <div class="chart-labels"><span>8 PM</span><span>Now</span></div>
+                </div>
+                <div class="pulse-stats"><div><strong>96%</strong><span>on-time arrival</span></div><div><strong>2m 18s</strong><span>avg. reassignment</span></div></div>
+              </section>
+
+              <section class="attention-card panel-card">
+                <div class="panel-heading compact"><div><div class="section-kicker">Needs attention</div><h2>Keep an eye on these</h2></div><button class="text-button" id="clear-attention">Clear all</button></div>
+                <div class="attention-list" id="attention-list"></div>
+              </section>
+
+              <section class="scenario-card panel-card" id="scenario-card">
+                <div class="scenario-header"><div class="scenario-icon">◈</div><div><div class="section-kicker">Scenario lab</div><h2>Test a failure</h2></div><span class="beta-tag">DEMO</span></div>
+                <p>Run the moments that break ordinary delivery systems. See Sanjeevani recover in real time.</p>
+                <div class="scenario-actions"><button data-scenario="no-show">Volunteer goes dark <span>→</span></button><button data-scenario="closure">Close Shelter A mid-route <span>→</span></button><button data-scenario="split">Split a 180-meal batch <span>→</span></button></div>
+              </section>
+            </aside>
+          </div>
+
+          <section class="activity-section panel-card">
+            <div class="panel-heading compact"><div><div class="section-kicker">Activity stream</div><h2>What just changed</h2></div><button class="text-button" id="pause-stream">Pause stream</button></div>
+            <div class="activity-list" id="activity-list"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="batch-modal" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-header"><div><div class="section-kicker">New intake</div><h2 id="modal-title">Log a donation</h2></div><button class="close-button" id="close-modal" aria-label="Close">×</button></div>
+        <form id="batch-form">
+          <div class="form-grid">
+            <label class="field full"><span>Donation title</span><input id="batch-title" value="Fresh surplus batch" required /></label>
+            <label class="field full"><span>What is being donated?</span><select id="batch-type" required><option value="Cooked meals">Cooked meals</option><option value="Medical supplies">Medical supplies</option><option value="Ration kits">Ration kits</option><option value="Infant formula">Infant formula</option></select></label>
+            <label class="field"><span>Quantity</span><input id="batch-quantity" type="number" min="1" value="80" required /></label>
+            <label class="field"><span>Unit</span><input id="batch-unit" value="meals" required /></label>
+            <label class="field"><span>Safe for (minutes)</span><input id="batch-expiry" type="number" min="5" value="75" required /></label>
+            <label class="field"><span>Donor / pickup point</span><input id="batch-donor" value="New donor site" required /></label>
+            <label class="field full"><span>Pickup address</span><input id="batch-address" value="Pune / Alandi demo location" /></label>
+            <label class="field"><span>Pickup window</span><select id="batch-window"><option>Now · ready at gate</option><option>In 15 minutes</option><option>In 30 minutes</option></select></label>
+            <label class="field"><span>Storage requirements</span><select id="batch-storage"><option value="Standard">Standard</option><option value="Room temperature">Room temperature</option><option value="Dry storage">Dry storage</option><option value="Refrigerated">Refrigerated</option></select></label>
+            <label class="field full"><span>Special handling</span><select id="batch-handling"><option value="Standard handling">Standard handling</option><option value="Keep chilled · cold-chain">Keep chilled · cold-chain</option><option value="Needs clean water at destination">Needs clean water at destination</option><option value="Needs cooking fuel at destination">Needs cooking fuel at destination</option></select></label>
+            <label class="field full"><span>Optional notes</span><input id="batch-notes" value="" placeholder="Packaging, dietary notes, recipient constraints" /></label>
+          </div>
+          <div class="form-note"><span>✦</span> Sanjeevani will only show destinations that can safely receive this donation before it expires.</div>
+          <div class="modal-actions"><button type="button" class="secondary-button" id="cancel-modal">Cancel</button><button type="submit" class="primary-button">Add to dispatch queue <span>→</span></button></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status"><span class="toast-icon">✓</span><span id="toast-message">Updated</span></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="app.js"></script>
+  </body>
+</html>

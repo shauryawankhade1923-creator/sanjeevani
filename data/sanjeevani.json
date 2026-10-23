@@ -1,0 +1,514 @@
+{
+  "version": 1,
+  "settings": {
+    "simulationNow": "2026-10-23T09:09:46.398Z",
+    "seedVersion": 1
+  },
+  "users": [
+    {
+      "id": "auth-admin",
+      "profileId": "profile-admin",
+      "password": {
+        "salt": "7331dc650c6585ab3c4de96a4ad62ffe",
+        "hash": "73d77d01fb8a7484b964944efdd9a4106acd677d60a6ccc66f0ee0ee1314e11136123421a0550acab1a98b8d6dacb67db64cd909b9e89d7ac9c990c21c61cd1a"
+      },
+      "createdAt": "2026-10-23T08:19:46.397Z"
+    },
+    {
+      "id": "auth-donor",
+      "profileId": "profile-donor",
+      "password": {
+        "salt": "7331dc650c6585ab3c4de96a4ad62ffe",
+        "hash": "73d77d01fb8a7484b964944efdd9a4106acd677d60a6ccc66f0ee0ee1314e11136123421a0550acab1a98b8d6dacb67db64cd909b9e89d7ac9c990c21c61cd1a"
+      },
+      "createdAt": "2026-10-23T08:19:46.397Z"
+    },
+    {
+      "id": "auth-rider",
+      "profileId": "profile-rider",
+      "password": {
+        "salt": "7331dc650c6585ab3c4de96a4ad62ffe",
+        "hash": "73d77d01fb8a7484b964944efdd9a4106acd677d60a6ccc66f0ee0ee1314e11136123421a0550acab1a98b8d6dacb67db64cd909b9e89d7ac9c990c21c61cd1a"
+      },
+      "createdAt": "2026-10-23T08:19:46.397Z"
+    },
+    {
+      "id": "auth-shelter",
+      "profileId": "profile-shelter",
+      "password": {
+        "salt": "7331dc650c6585ab3c4de96a4ad62ffe",
+        "hash": "73d77d01fb8a7484b964944efdd9a4106acd677d60a6ccc66f0ee0ee1314e11136123421a0550acab1a98b8d6dacb67db64cd909b9e89d7ac9c990c21c61cd1a"
+      },
+      "createdAt": "2026-10-23T08:19:46.397Z"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "profile-admin",
+      "authUserId": "auth-admin",
+      "email": "admin@demo.sanjeevani.app",
+      "name": "Riya Kapoor",
+      "role": "admin",
+      "entityId": "network-1"
+    },
+    {
+      "id": "profile-donor",
+      "authUserId": "auth-donor",
+      "email": "donor@demo.sanjeevani.app",
+      "name": "Aarav Foods",
+      "role": "donor",
+      "entityId": "donor-1"
+    },
+    {
+      "id": "profile-rider",
+      "authUserId": "auth-rider",
+      "email": "rider@demo.sanjeevani.app",
+      "name": "Aarav Mehta",
+      "role": "rider",
+      "entityId": "rider-1"
+    },
+    {
+      "id": "profile-shelter",
+      "authUserId": "auth-shelter",
+      "email": "shelter@demo.sanjeevani.app",
+      "name": "Night Shelter A",
+      "role": "shelter",
+      "entityId": "center-1"
+    }
+  ],
+  "centers": [
+    {
+      "id": "center-1",
+      "name": "Night Shelter A",
+      "type": "Night shelter",
+      "lat": 18.586,
+      "lng": 73.899,
+      "address": "Alandi Road, Pune",
+      "isOpen": true,
+      "capacity": 140,
+      "occupancy": 96,
+      "water": true,
+      "fuel": true,
+      "receivingHours": "18:00–23:30"
+    },
+    {
+      "id": "center-2",
+      "name": "Relief Camp 4",
+      "type": "Emergency camp",
+      "lat": 18.575,
+      "lng": 73.902,
+      "address": "Vishrantwadi Relief Ground",
+      "isOpen": true,
+      "capacity": 100,
+      "occupancy": 46,
+      "water": true,
+      "fuel": false,
+      "receivingHours": "All day"
+    },
+    {
+      "id": "center-3",
+      "name": "Community Kitchen Hub",
+      "type": "Community kitchen",
+      "lat": 18.601,
+      "lng": 73.913,
+      "address": "Dighi Hills Community Hall",
+      "isOpen": true,
+      "capacity": 220,
+      "occupancy": 88,
+      "water": true,
+      "fuel": true,
+      "receivingHours": "17:00–22:30"
+    },
+    {
+      "id": "center-4",
+      "name": "Relief Camp 2",
+      "type": "Medical relief camp",
+      "lat": 18.565,
+      "lng": 73.887,
+      "address": "Yerawada Community Centre",
+      "isOpen": true,
+      "capacity": 80,
+      "occupancy": 28,
+      "water": true,
+      "fuel": false,
+      "receivingHours": "All day"
+    }
+  ],
+  "demands": [
+    {
+      "id": "demand-1",
+      "centerId": "center-1",
+      "category": "Cooked meals",
+      "unit": "meals",
+      "quantity": 44,
+      "priority": "urgent",
+      "acceptedCategories": [
+        "Cooked meals",
+        "Packaged food",
+        "Drinking water"
+      ],
+      "updatedAt": "2026-10-23T09:09:46.398Z"
+    },
+    {
+      "id": "demand-2",
+      "centerId": "center-1",
+      "category": "Ration kits",
+      "unit": "kits",
+      "quantity": 24,
+      "priority": "normal",
+      "acceptedCategories": [
+        "Ration kits",
+        "Groceries",
+        "Drinking water"
+      ],
+      "updatedAt": "2026-10-23T09:09:46.398Z"
+    },
+    {
+      "id": "demand-3",
+      "centerId": "center-2",
+      "category": "Medical supplies",
+      "unit": "kits",
+      "quantity": 18,
+      "priority": "urgent",
+      "acceptedCategories": [
+        "Medical supplies",
+        "Drinking water"
+      ],
+      "updatedAt": "2026-10-23T09:09:46.398Z"
+    },
+    {
+      "id": "demand-4",
+      "centerId": "center-3",
+      "category": "Cooked meals",
+      "unit": "meals",
+      "quantity": 90,
+      "priority": "normal",
+      "acceptedCategories": [
+        "Cooked meals",
+        "Packaged food",
+        "Groceries"
+      ],
+      "updatedAt": "2026-10-23T09:09:46.398Z"
+    },
+    {
+      "id": "demand-5",
+      "centerId": "center-4",
+      "category": "Medical supplies",
+      "unit": "kits",
+      "quantity": 10,
+      "priority": "normal",
+      "acceptedCategories": [
+        "Medical supplies"
+      ],
+      "updatedAt": "2026-10-23T09:09:46.398Z"
+    }
+  ],
+  "riders": [
+    {
+      "id": "rider-1",
+      "name": "Aarav Mehta",
+      "phone": "+91 90000 10001",
+      "vehicle": "Scooter",
+      "capacity": 40,
+      "capacityReserved": 0,
+      "availability": "available",
+      "lat": 18.579,
+      "lng": 73.895,
+      "lastSeenAt": "2026-10-23T09:09:46.398Z",
+      "reliability": 0.96,
+      "userId": "auth-rider"
+    },
+    {
+      "id": "rider-2",
+      "name": "Meera Joshi",
+      "phone": "+91 90000 10002",
+      "vehicle": "Scooter",
+      "capacity": 40,
+      "capacityReserved": 0,
+      "availability": "available",
+      "lat": 18.589,
+      "lng": 73.906,
+      "lastSeenAt": "2026-10-23T09:09:46.398Z",
+      "reliability": 0.91,
+      "userId": null
+    },
+    {
+      "id": "rider-3",
+      "name": "Kabir Singh",
+      "phone": "+91 90000 10003",
+      "vehicle": "Cargo bike",
+      "capacity": 80,
+      "capacityReserved": 40,
+      "availability": "on_delivery",
+      "lat": 18.596,
+      "lng": 73.908,
+      "lastSeenAt": "2026-10-23T09:09:46.398Z",
+      "reliability": 0.94,
+      "userId": null
+    },
+    {
+      "id": "rider-4",
+      "name": "Zoya Khan",
+      "phone": "+91 90000 10004",
+      "vehicle": "Scooter",
+      "capacity": 30,
+      "capacityReserved": 30,
+      "availability": "on_delivery",
+      "lat": 18.583,
+      "lng": 73.898,
+      "lastSeenAt": "2026-10-23T09:09:46.398Z",
+      "reliability": 0.98,
+      "userId": null
+    },
+    {
+      "id": "rider-5",
+      "name": "Sanjay Rao",
+      "phone": "+91 90000 10005",
+      "vehicle": "Cold-chain van",
+      "capacity": 30,
+      "capacityReserved": 0,
+      "availability": "available",
+      "lat": 18.57,
+      "lng": 73.89,
+      "lastSeenAt": "2026-10-23T09:09:46.398Z",
+      "reliability": 0.89,
+      "userId": null
+    }
+  ],
+  "donations": [
+    {
+      "id": "donation-1",
+      "donorId": "donor-1",
+      "donorName": "Banquet Hall South",
+      "title": "Dinner service surplus",
+      "category": "Cooked meals",
+      "quantity": 180,
+      "unit": "meals",
+      "originalQuantity": 180,
+      "availableQuantity": 40,
+      "reservedQuantity": 80,
+      "pickedUpQuantity": 60,
+      "deliveredQuantity": 40,
+      "expiredQuantity": 0,
+      "availableAt": "2026-10-23T08:49:46.398Z",
+      "safeUntil": "2026-10-23T10:04:46.398Z",
+      "pickupLocation": {
+        "name": "Banquet Hall South",
+        "address": "Kharadi Bypass, Pune",
+        "lat": 18.575,
+        "lng": 73.91
+      },
+      "storage": "Room temperature",
+      "handling": "Keep covered; deliver before safe-use deadline",
+      "pickupWindow": "Ready now",
+      "notes": "Untouched vegetarian buffet meals",
+      "status": "partially_allocated",
+      "createdAt": "2026-10-23T08:19:46.397Z",
+      "seeded": true
+    },
+    {
+      "id": "donation-2",
+      "donorId": "donor-2",
+      "donorName": "City Pharmacy",
+      "title": "Cold-chain first aid kits",
+      "category": "Medical supplies",
+      "quantity": 12,
+      "unit": "kits",
+      "originalQuantity": 12,
+      "availableQuantity": 12,
+      "reservedQuantity": 0,
+      "pickedUpQuantity": 0,
+      "deliveredQuantity": 0,
+      "expiredQuantity": 0,
+      "availableAt": "2026-10-23T09:09:46.398Z",
+      "safeUntil": "2026-10-23T12:09:46.398Z",
+      "pickupLocation": {
+        "name": "City Pharmacy",
+        "address": "Alandi Road, Pune",
+        "lat": 18.581,
+        "lng": 73.904
+      },
+      "storage": "Refrigerated",
+      "handling": "Maintain cold chain",
+      "pickupWindow": "20:20–20:45",
+      "notes": "Temperature-sensitive wound care",
+      "status": "available",
+      "createdAt": "2026-10-23T08:19:46.397Z",
+      "seeded": true
+    },
+    {
+      "id": "donation-3",
+      "donorId": "donor-3",
+      "donorName": "Fresh Mart",
+      "title": "Dry ration cartons",
+      "category": "Ration kits",
+      "quantity": 24,
+      "unit": "kits",
+      "originalQuantity": 24,
+      "availableQuantity": 24,
+      "reservedQuantity": 0,
+      "pickedUpQuantity": 0,
+      "deliveredQuantity": 0,
+      "expiredQuantity": 0,
+      "safeUntil": "2026-10-23T21:09:46.398Z",
+      "availableAt": "2026-10-23T09:09:46.398Z",
+      "pickupLocation": {
+        "name": "Fresh Mart",
+        "address": "Moshi, Pune",
+        "lat": 18.65,
+        "lng": 73.84
+      },
+      "storage": "Dry storage",
+      "handling": "Keep dry",
+      "pickupWindow": "Ready now",
+      "notes": "Rice, dal, oil and spices",
+      "status": "available",
+      "createdAt": "2026-10-23T08:19:46.397Z",
+      "seeded": true
+    },
+    {
+      "id": "donation-4",
+      "donorId": "donor-1",
+      "donorName": "Hostel 12 Mess",
+      "title": "Late dinner surplus",
+      "category": "Cooked meals",
+      "quantity": 60,
+      "unit": "meals",
+      "originalQuantity": 60,
+      "availableQuantity": 20,
+      "reservedQuantity": 40,
+      "pickedUpQuantity": 0,
+      "deliveredQuantity": 0,
+      "expiredQuantity": 0,
+      "safeUntil": "2026-10-23T09:16:46.398Z",
+      "availableAt": "2026-10-23T08:57:46.398Z",
+      "pickupLocation": {
+        "name": "Hostel 12 Mess",
+        "address": "Alandi Campus, Pune",
+        "lat": 18.61,
+        "lng": 73.87
+      },
+      "storage": "Room temperature",
+      "handling": "Immediate pickup required",
+      "pickupWindow": "Ready now",
+      "notes": "Sealed portions",
+      "status": "partially_allocated",
+      "createdAt": "2026-10-23T08:19:46.397Z",
+      "seeded": true
+    }
+  ],
+  "shipments": [
+    {
+      "id": "shipment-1",
+      "donationId": "donation-1",
+      "riderId": "rider-1",
+      "centerId": "center-1",
+      "quantity": 40,
+      "unit": "meals",
+      "status": "delivered",
+      "offeredAt": "2026-10-23T08:33:46.398Z",
+      "acceptedAt": "2026-10-23T08:35:46.398Z",
+      "pickedUpAt": "2026-10-23T08:39:46.398Z",
+      "inTransitAt": "2026-10-23T08:40:46.398Z",
+      "etaAt": "2026-10-23T09:27:46.398Z",
+      "reservationExpiresAt": null,
+      "delayMinutes": 0,
+      "safeUntil": "2026-10-23T10:04:46.398Z",
+      "simulated": true,
+      "deliveredAt": "2026-10-23T09:09:46.398Z",
+      "receivedQuantity": 40
+    },
+    {
+      "id": "shipment-2",
+      "donationId": "donation-1",
+      "riderId": "rider-3",
+      "centerId": "center-3",
+      "quantity": 40,
+      "unit": "meals",
+      "status": "picked_up",
+      "offeredAt": "2026-10-23T08:44:46.398Z",
+      "acceptedAt": "2026-10-23T08:46:46.398Z",
+      "pickedUpAt": "2026-10-23T08:49:46.398Z",
+      "inTransitAt": null,
+      "etaAt": "2026-10-23T09:42:46.398Z",
+      "reservationExpiresAt": null,
+      "delayMinutes": 0,
+      "safeUntil": "2026-10-23T10:04:46.398Z",
+      "simulated": true
+    },
+    {
+      "id": "shipment-3",
+      "donationId": "donation-4",
+      "riderId": "rider-2",
+      "centerId": "center-1",
+      "quantity": 40,
+      "unit": "meals",
+      "status": "offered",
+      "offeredAt": "2026-10-23T09:07:46.398Z",
+      "acceptedAt": null,
+      "pickedUpAt": null,
+      "inTransitAt": null,
+      "etaAt": "2026-10-23T09:31:46.398Z",
+      "reservationExpiresAt": "2026-10-23T09:14:46.398Z",
+      "delayMinutes": 0,
+      "safeUntil": "2026-10-23T09:16:46.398Z",
+      "simulated": true
+    }
+  ],
+  "events": [
+    {
+      "id": "event_6795f5a8-ac45-4d2c-a086-0bc9402ae8a6",
+      "type": "shipment.delivered",
+      "message": "40 meals received by Night Shelter A",
+      "actorId": "auth-shelter",
+      "createdAt": "2026-10-23T09:09:46.398Z",
+      "metadata": {
+        "shipmentId": "shipment-1"
+      }
+    },
+    {
+      "id": "event_43178548-fdd2-459d-8e63-9da0729df541",
+      "type": "demand.updated",
+      "message": "Night Shelter A changed Cooked meals demand to 44 meals",
+      "actorId": "auth-shelter",
+      "createdAt": "2026-10-23T09:09:46.398Z",
+      "metadata": {
+        "centerId": "center-1",
+        "demandId": "demand-1",
+        "delta": 0
+      }
+    },
+    {
+      "id": "event_db662037-e87c-4d1c-be98-423db961d700",
+      "type": "seeded",
+      "message": "Sanjeevani demo network initialized",
+      "actorId": "auth-admin",
+      "createdAt": "2026-10-23T08:19:46.397Z",
+      "metadata": {
+        "seeded": true
+      }
+    },
+    {
+      "id": "event_09c25fd6-a313-417b-9cec-599caa7b8eff",
+      "type": "shipment.in_transit",
+      "message": "40 meals are moving to Night Shelter A",
+      "actorId": "auth-rider",
+      "createdAt": "2026-10-23T09:07:46.398Z",
+      "metadata": {
+        "shipmentId": "shipment-1",
+        "seeded": true
+      }
+    },
+    {
+      "id": "event_4fbb27ad-8c8b-4d94-a31f-a7001540d1f5",
+      "type": "assignment.offered",
+      "message": "Reservation needs a check-in",
+      "actorId": "auth-admin",
+      "createdAt": "2026-10-23T09:05:46.398Z",
+      "metadata": {
+        "shipmentId": "shipment-3",
+        "seeded": true
+      }
+    }
+  ]
+}
