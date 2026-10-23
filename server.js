@@ -170,7 +170,7 @@ function isRole(user, ...roles) { return user && roles.includes(user.role); }
 function centerForUser(user) { return db.centers.find((center) => center.id === user?.entityId); }
 function riderForUser(user) { return db.riders.find((rider) => rider.userId === user?.authUserId || rider.id === user?.entityId); }
 function donationForUser(donation, user) { return isRole(user, 'admin') || (user?.role === 'donor' && donation.donorId === user.entityId); }
-function shipmentVisible(shipment, user) { return isRole(user, 'admin') || (user?.role === 'rider' && shipment.riderId === user.entityId) || (user?.role === 'shelter' && shipment.centerId === user.entityId) || (user?.role === 'donor' && donationForUser(db.donations.find((d) => d.id === shipment.donationId), user)); }
+function shipmentVisible(shipment, user) { return isRole(user, 'admin') || (user?.role === 'rider' && (!shipment.riderId || shipment.riderId === user.entityId)) || (user?.role === 'shelter' && shipment.centerId === user.entityId) || (user?.role === 'donor' && donationForUser(db.donations.find((d) => d.id === shipment.donationId), user)); }
 
 function haversineMinutes(a, b) {
   if (!a || !b) return 30;
@@ -270,14 +270,54 @@ function stateFor(user) {
 }
 
 async function body(req) {
-  return new Promise((resolve, reject) => { let raw = ''; req.on('data', (chunk) => { raw += chunk; if (raw.length > 2_000_000) req.destroy(); }); req.on('end', () => { try { resolve(raw ? JSON.parse(raw) : {}); } catch { reject(new Error('Invalid JSON body')); } }); req.on('error', reject); });
+  if (req.body !== undefined && req.body !== null) {
+    if (typeof req.body === 'object') return req.body;
+    if (typeof req.body === 'string') {
+      try { return JSON.parse(req.body); } catch { throw new Error('Invalid JSON body'); }
+    }
+  }
+  return new Promise((resolve, reject) => {
+    let raw = '';
+    req.on('data', (chunk) => {
+      raw += chunk;
+      if (raw.length > 2_000_000) req.destroy();
+    });
+    req.on('end', () => {
+      try {
+        resolve(raw ? JSON.parse(raw) : {});
+      } catch {
+        reject(new Error('Invalid JSON body'));
+      }
+    });
+    req.on('error', reject);
+  });
 }
-function send(res, status, payload, headers = {}) { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...headers }); res.end(JSON.stringify(payload)); }
+function send(res, status, payload, headers = {}) {
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie',
+    ...headers
+  });
+  res.end(JSON.stringify(payload));
+}
 function fail(res, status, message, details = []) { send(res, status, { error: message, details }); }
 function requireUser(req, res) { const user = userFromRequest(req); if (!user) { fail(res, 401, 'Authentication required'); return null; } return user; }
 
 async function api(req, res, pathname) {
   const method = req.method || 'GET';
+  if (method === 'OPTIONS') {
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie',
+      'Access-Control-Max-Age': '86400'
+    });
+    res.end();
+    return;
+  }
   if (pathname === '/api/health') return send(res, 200, { ok: true, mode: 'local-demo', supabaseConfigured: Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY), timestamp: new Date().toISOString() });
   if (pathname === '/api/config') return send(res, 200, { appName: 'Sanjeevani', tagline: 'Delivering What Matters When It Matters.', mode: 'local-demo', supabaseConfigured: Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY), mapConfigured: true });
   if (pathname === '/api/auth/login' && method === 'POST') {
@@ -348,7 +388,18 @@ async function api(req, res, pathname) {
       if (action === 'pickup-arrived') { shipment.status = 'pickup_confirmed'; shipment.pickupArrivedAt = db.settings.simulationNow; recordEvent('shipment.pickup_arrived', `${rider.name} arrived at ${donation.pickupLocation.name}`, user.authUserId, { shipmentId: shipment.id }); }
       if (action === 'picked-up') { if (!['reserved', 'pickup_confirmed'].includes(shipment.status)) return fail(res, 409, 'Shipment must be accepted before pickup'); shipment.status = 'picked_up'; shipment.pickedUpAt = db.settings.simulationNow; donation.reservedQuantity = Math.max(0, donation.reservedQuantity - shipment.quantity); donation.pickedUpQuantity += shipment.quantity; recordEvent('shipment.picked_up', `${shipment.quantity} ${shipment.unit} collected from ${donation.pickupLocation.name}`, user.authUserId, { shipmentId: shipment.id }); }
       if (action === 'in-transit') { if (shipment.status !== 'picked_up') return fail(res, 409, 'Mark pickup complete first'); shipment.status = 'in_transit'; shipment.inTransitAt = db.settings.simulationNow; rider.availability = 'on_delivery'; recordEvent('shipment.in_transit', `${shipment.quantity} ${shipment.unit} are in transit to ${center.name}`, user.authUserId, { shipmentId: shipment.id }); }
-      if (action === 'delivered') { if (!['in_transit', 'picked_up'].includes(shipment.status)) return fail(res, 409, 'Shipment is not ready to be delivered'); shipment.status = 'delivered'; shipment.deliveredAt = db.settings.simulationNow; shipment.receivedQuantity = shipment.quantity; donation.deliveredQuantity += shipment.quantity; rider.capacityReserved = Math.max(0, rider.capacityReserved - shipment.quantity); rider.availability = 'available'; recordEvent('shipment.delivered', `${shipment.quantity} ${shipment.unit} received by ${center.name}`, user.authUserId, { shipmentId: shipment.id }); }
+      if (action === 'delivered') {
+        if (!['in_transit', 'picked_up', 'delayed', 'rerouted'].includes(shipment.status)) return fail(res, 409, 'Shipment is not ready to be delivered');
+        shipment.status = 'delivered';
+        shipment.deliveredAt = db.settings.simulationNow;
+        shipment.receivedQuantity = shipment.quantity;
+        if (donation) donation.deliveredQuantity = (donation.deliveredQuantity || 0) + shipment.quantity;
+        if (rider) {
+          rider.capacityReserved = Math.max(0, rider.capacityReserved - shipment.quantity);
+          rider.availability = 'available';
+        }
+        recordEvent('shipment.delivered', `${shipment.quantity} ${shipment.unit} received by ${center ? center.name : 'shelter'}`, user.authUserId, { shipmentId: shipment.id });
+      }
       if (action === 'report-delay') { const input = await body(req); const delay = clamp(Number(input.delayMinutes || 10), 1, 240); shipment.delayMinutes = delay; shipment.etaAt = addMinutes(shipment.etaAt, delay); shipment.status = 'delayed'; recordEvent('shipment.delayed', `${rider.name} reported a ${delay}-minute delay`, user.authUserId, { shipmentId: shipment.id, delayMinutes: delay }); }
       commit(`shipment.${action}`, { shipmentId: shipment.id }); return send(res, 200, { shipment, state: stateFor(user) });
     }
