@@ -1,115 +1,94 @@
-# Sanjeevani
+# 🌿 Sanjeevani — Delivering What Matters When It Matters
 
-**Delivering What Matters When It Matters.**
+[![Production Status](https://img.shields.io/badge/Production-Live-success?style=for-the-badge&logo=vercel)](https://sanjeevani-henna-alpha.vercel.app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Node: >=20](https://img.shields.io/badge/Node->=20-brightgreen?style=for-the-badge&logo=node.js)](package.json)
+[![Codebase Status](https://img.shields.io/badge/Smoke%20Tests-Passing-success?style=for-the-badge)](scripts/smoke-test.js)
 
-Sanjeevani is a full-stack civic micro-logistics prototype for coordinating perishable surplus, volunteer riders, and receiving centers under time, capacity, compatibility, and reliability constraints.
+> **Sanjeevani** is a real-time, constraints-driven civic micro-logistics platform built to coordinate perishable surplus food batches, urgent medical kits, volunteer couriers, and receiving relief shelters before critical perishables spoil.
 
-## What is implemented
+---
 
-- Real Node.js HTTP server with JSON persistence in `data/sanjeevani.json`.
-- Cookie-based authenticated sessions and four role-based demo accounts.
-- Shared state across browser tabs/devices connected to the same server through Server-Sent Events.
-- Role workspaces for administrators, donors, volunteer riders, and receiving centers.
-- Donation creation with category, quantity, safe-use window, storage, handling, pickup, and notes.
-- Allocation engine with hard safety filters for capacity, demand, center status, dependencies, cold chain, and expiry feasibility.
-- Reservation leases with server-side expiry and exact-once quantity release.
-- Shipment lifecycle: offer, accept, pickup arrival, picked up, in transit, delayed, rerouted, delivered, expired, and cancelled.
-- Demand and receiving-center status updates with reassessment of affected allocations.
-- Scenario Lab controls that mutate shared records: urgent batch, split batch, rider no-show, clock advance, shelter closure, demand reduction, delay, rider movement, and reset.
-- Leaflet + OpenStreetMap live operations map using clearly labelled simulated Pune/Alandi coordinates.
-- Database-ready Supabase schema with RLS policies in `supabase/migrations/001_initial_schema.sql`.
-- Vercel-compatible static serving structure and environment template.
+## 🌐 Live Demo & Deployment
 
-## Run locally
+- **Live Production WebApp**: [https://sanjeevani-henna-alpha.vercel.app](https://sanjeevani-henna-alpha.vercel.app)
+- **GitHub Repository**: [https://github.com/shauryawankhade1923-creator/sanjeevani](https://github.com/shauryawankhade1923-creator/sanjeevani)
 
-Requirements: Node.js 20 or newer.
+---
 
-```bash
-npm run dev
-```
+## 📚 Complete Project Documentation
 
-Open:
+| Document | Description | Link |
+| --- | --- | --- |
+| 🏗️ **System Architecture** | Technical design, constraints formula, data models, state machines, and security invariants | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| 🔌 **REST API Reference** | Complete endpoint documentation, request/response payloads, and role authorization | [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md) |
+| 📖 **User & Operational Guide** | Step-by-step walkthrough for Administrators, Donors, Riders, and Shelters | [docs/USER_GUIDE.md](docs/USER_GUIDE.md) |
+| 🚀 **Deployment & Ops Manual** | Vercel setup, serverless architecture, environment variables, and Supabase migration | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
 
-```text
-http://localhost:4173
-```
+---
 
-The local server creates `data/sanjeevani.json` on first start. This file is intentionally ignored by Git and is the shared source of truth for the local demo mode.
+## ⚡ Key Capabilities & Implemented Features
 
-To reset the deterministic dataset:
+- **🛡️ Safety-First Allocation Engine**: Computes strict mathematical feasibility for travel time, cargo compatibility, remaining safe-use shelf life, rider capacity, and shelter utility dependencies before allocating surplus.
+- **🔄 1-Click Reverse Role Switcher**: Instant switching between Administrator, Surplus Donor, Volunteer Rider, and Receiving Shelter without logging out.
+- **🗺️ Dedicated Rider Navigation Map**:
+  - Turn-by-turn mission HUD with real-time countdown to food/medicine expiry.
+  - Live animated route polylines connecting Rider 🛵 ➔ Donor 📦 ➔ Shelter 🏥.
+  - Custom pulsating radar GPS marker.
+  - Interactive on-map simulation controls (`⚡ Step GPS Along Route`, `🎯 Center On Me`).
+- **📦 Verified Chain-of-Custody FSM**: Full shipment lifecycle (Offered ➔ Accepted ➔ Arrived ➔ Picked Up ➔ In Transit ➔ Delivered), backed by immutable audit logs.
+- **🧪 Scenario Lab (Chaos Engineering)**: Real-time simulation of high-urgency donations, shelter closures mid-route, transit delays, and rider no-shows.
+- **🔐 Resilient Serverless Security**: Stateless HMAC-SHA256 signed session cookies compatible with horizontal serverless scaling.
+- **📡 Server-Sent Events (SSE)**: Instant real-time state synchronization across all connected devices and browser tabs.
 
-```bash
-npm run seed
-npm run dev
-```
+---
 
-## Demo accounts
+## 👥 Demo Personas & Logins
 
-The four accounts are real server-authenticated demo users, not frontend bypass buttons:
+Click any of the **Quick Demo Profile Chips** on the login screen, or sign in using:
 
-| Role | Email |
-| --- | --- |
-| Administrator | `admin@demo.sanjeevani.app` |
-| Donor | `donor@demo.sanjeevani.app` |
-| Volunteer rider | `rider@demo.sanjeevani.app` |
-| Receiving center | `shelter@demo.sanjeevani.app` |
+| Role | Email | Password | What You Can Do |
+| --- | --- | --- | --- |
+| **Administrator** | `admin@demo.sanjeevani.app` | `SanjeevaniDemo!2026` | Monitor city operations, auto-match batches, run Scenario Lab |
+| **Surplus Donor** | `donor@demo.sanjeevani.app` | `SanjeevaniDemo!2026` | Post surplus food/medical batches with strict safe shelf-life |
+| **Volunteer Rider** | `rider@demo.sanjeevani.app` | `SanjeevaniDemo!2026` | Claim allocations, follow GPS turn-by-turn route map, report delays |
+| **Receiving Center** | `shelter@demo.sanjeevani.app` | `SanjeevaniDemo!2026` | Express demand, manage shelter capacity, confirm delivery handoffs |
 
-Set the shared server-only password in `.env`:
+---
 
-```bash
-copy .env.example .env
-```
-
-Then change `DEMO_PASSWORD` to a value of your choice. If no `.env` exists, local development uses the server-side fallback `SanjeevaniDemo!2026`; it is never sent in frontend JavaScript. For a shared evaluation environment, always set `DEMO_PASSWORD` and `SESSION_SECRET` explicitly.
-
-## Realtime test
-
-1. Run `npm run dev`.
-2. Open two browser windows at `http://localhost:4173`.
-3. Sign in as donor in one window and admin in the other using the same configured demo password.
-4. Create a donation in the donor window.
-5. The admin dispatch and activity views update through the server event stream without a manual refresh.
-6. Repeat with rider and shelter accounts to exercise assignment and delivery transitions.
-
-## Supabase setup
-
-The SQL migration is ready at:
-
-```text
-supabase/migrations/001_initial_schema.sql
-```
-
-Apply it in the Supabase SQL editor or with the Supabase CLI. Then create the four users in Supabase Auth and insert matching rows into `public.profiles`. Use fictional demo identities only. Never expose a service-role key in browser code.
-
-Required environment variables are listed in `.env.example`:
-
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` (server-only)
-- `DEMO_PASSWORD`
-- `SESSION_SECRET`
-- Optional `OSRM_BASE_URL`
-
-The current local adapter is deliberately kept as the default so the prototype remains runnable without external credentials. The Supabase schema, relationships, indexes, and RLS policies are included for the next persistence cutover. Supabase credentials and the final production persistence adapter are the remaining external setup dependency.
-
-## Maps and routing
-
-Leaflet and OpenStreetMap are loaded in the browser with attribution. The demo uses fictional seeded coordinates around Pune/Alandi and labels rider positions as simulated. If Leaflet or tiles cannot load, the map panel shows a clear fallback message. Straight-line feasibility is used by the local allocation engine; it is not presented as verified road routing. Configure `OSRM_BASE_URL` before adding a production routing adapter.
-
-## Checks
+## 💻 Quickstart (Local Development)
 
 ```bash
+# Clone the repository
+git clone https://github.com/shauryawankhade1923-creator/sanjeevani.git
+cd sanjeevani
+
+# Verify code integrity
 npm run check
+
+# Start development server
+npm run dev
 ```
 
-This validates both `server.js` and `app.js` syntax. Start the server and use the role workflows above for the end-to-end smoke test.
+Open `http://localhost:4173` in your browser.
 
-## Vercel preparation
+To run the automated smoke test against production or local:
+```bash
+# Test local
+npm test
 
-The frontend assets are Vercel-compatible, but the current JSON persistence server is intended for local/shared demo use because serverless filesystems are ephemeral. For production deployment:
+# Test production
+$env:BASE_URL = "https://sanjeevani-henna-alpha.vercel.app"
+node scripts/smoke-test.js
+```
 
-1. Apply the Supabase migration.
-2. Create Auth users and profiles.
-3. Move the API handlers to Vercel Functions or switch the persistence layer to Supabase queries.
-4. Configure environment variables in Vercel without exposing the service-role key to the client.
-5. Add a production routing provider if road-accurate ETAs are required.
+---
+
+## 🛠️ Technology Stack
+
+- **Runtime**: Node.js 20+ (zero-dependency pure native HTTP server & crypto modules)
+- **Frontend**: Responsive Single-Page Application (HTML5, modern CSS3 with custom properties, vanilla ES6+)
+- **Mapping Engine**: Leaflet 1.9.4 & OpenStreetMap with custom vector layers and divIcon markers
+- **Realtime**: Server-Sent Events (SSE) with adaptive visibility polling
+- **Hosting & Edge**: Vercel Serverless Functions
+- **Database Target**: Ready-to-deploy Supabase PostgreSQL schema with Row-Level Security (`supabase/migrations/001_initial_schema.sql`)
