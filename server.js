@@ -111,15 +111,60 @@ function loadDatabase() {
   try { return JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch { const fresh = seedDatabase(); fs.writeFileSync(DB_FILE, JSON.stringify(fresh, null, 2)); return fresh; }
 }
 
-function persist() { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
+let lastDbLoadTime = Date.now();
+
+function checkReloadDb() {
+  if (fs.existsSync(DB_FILE)) {
+    try {
+      const stats = fs.statSync(DB_FILE);
+      if (stats.mtimeMs > lastDbLoadTime) {
+        db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+        lastDbLoadTime = stats.mtimeMs;
+      }
+    } catch {}
+  }
+}
+
+function persist() {
+  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+  lastDbLoadTime = Date.now();
+}
+
+function createSessionToken(authUserId) {
+  const expiresAt = Date.now() + 1000 * 60 * 60 * 24;
+  const payload = Buffer.from(JSON.stringify({ authUserId, expiresAt })).toString('base64url');
+  const sig = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function verifySessionToken(token) {
+  if (!token) return null;
+  if (sessions.has(token)) {
+    const s = sessions.get(token);
+    if (s && s.expiresAt > Date.now()) return s.authUserId;
+  }
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [payload, sig] = parts;
+  const expectedSig = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('base64url');
+  if (sig !== expectedSig) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (!data.authUserId || data.expiresAt < Date.now()) return null;
+    return data.authUserId;
+  } catch {
+    return null;
+  }
+}
+
 function publicProfile(profile) { const { authUserId, ...safe } = profile; return safe; }
 function userFromRequest(req) {
   const cookie = req.headers.cookie || '';
   const match = cookie.match(/sanjeevani_session=([^;]+)/);
   if (!match) return null;
-  const session = sessions.get(match[1]);
-  if (!session || session.expiresAt < Date.now()) { sessions.delete(match[1]); return null; }
-  return db.profiles.find((profile) => profile.authUserId === session.authUserId) || null;
+  const authUserId = verifySessionToken(match[1]);
+  if (!authUserId) return null;
+  return db.profiles.find((profile) => profile.authUserId === authUserId) || null;
 }
 function isRole(user, ...roles) { return user && roles.includes(user.role); }
 function centerForUser(user) { return db.centers.find((center) => center.id === user?.entityId); }
@@ -240,9 +285,9 @@ async function api(req, res, pathname) {
       const input = await body(req); const email = String(input.email || '').trim().toLowerCase(); const password = String(input.password || '');
       const profile = db.profiles.find((item) => item.email === email); const user = profile && db.users.find((item) => item.id === profile.authUserId);
       if (!user || !verifyPassword(password, user.password)) return fail(res, 401, 'Invalid email or password');
-      const token = crypto.createHmac('sha256', SESSION_SECRET).update(`${user.id}:${Date.now()}:${crypto.randomUUID()}`).digest('hex');
-      sessions.set(token, { authUserId: user.id, expiresAt: Date.now() + 1000 * 60 * 60 * 12 });
-      return send(res, 200, { user: publicProfile(profile), mode: 'local-demo' }, { 'Set-Cookie': `sanjeevani_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200` });
+      const token = createSessionToken(user.id);
+      sessions.set(token, { authUserId: user.id, expiresAt: Date.now() + 1000 * 60 * 60 * 24 });
+      return send(res, 200, { user: publicProfile(profile), mode: 'local-demo' }, { 'Set-Cookie': `sanjeevani_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400` });
     } catch (error) { return fail(res, 400, error.message); }
   }
   if (pathname === '/api/auth/logout' && method === 'POST') return send(res, 200, { ok: true }, { 'Set-Cookie': 'sanjeevani_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0' });
@@ -314,7 +359,15 @@ async function api(req, res, pathname) {
     if (!isRole(user, 'admin')) return fail(res, 403, 'Administrator role required'); const input = await body(req); const donation = db.donations.find((item) => item.id === input.donationId); if (!donation) return fail(res, 404, 'Donation not found'); const result = autoDispatch(donation, user.authUserId); if (!result.created.length) return fail(res, 422, 'No feasible match found', result.reasons); commit('dispatch.recalculated', { donationId: donation.id, created: result.created.map((shipment) => shipment.id) }); return send(res, 200, { ...result, state: stateFor(user) });
   }
   if (pathname === '/api/admin/scenario' && method === 'POST') {
-    if (!isRole(user, 'admin')) return fail(res, 403, 'Administrator role required'); const input = await body(req); const result = runScenario(String(input.scenario || ''), user.authUserId); if (result.error) return fail(res, result.status || 422, result.error, result.details || []); commit('scenario.completed', { scenario: input.scenario }); return send(res, 200, { ...result, state: stateFor(user) });
+    const input = await body(req);
+    const scenarioName = String(input.scenario || '');
+    if (!isRole(user, 'admin') && !['movement', 'advance-time'].includes(scenarioName)) {
+      return fail(res, 403, 'Administrator role required');
+    }
+    const result = runScenario(scenarioName, user.authUserId);
+    if (result.error) return fail(res, result.status || 422, result.error, result.details || []);
+    commit('scenario.completed', { scenario: scenarioName });
+    return send(res, 200, { ...result, state: stateFor(user) });
   }
   return fail(res, 404, 'API route not found');
 }
@@ -379,6 +432,7 @@ function serveStatic(req, res, pathname) {
 
 async function handleRequest(req, res) {
   try {
+    checkReloadDb();
     const parsed = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     if (parsed.pathname.startsWith('/api/')) return await api(req, res, parsed.pathname);
     return serveStatic(req, res, parsed.pathname);

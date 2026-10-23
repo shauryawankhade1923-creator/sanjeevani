@@ -1,4 +1,4 @@
-const base = 'http://localhost:4173';
+const base = process.env.BASE_URL || 'http://localhost:4173';
 
 async function login(email) {
   const response = await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, password: process.env.DEMO_PASSWORD || 'SanjeevaniDemo!2026' }) });
