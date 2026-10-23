@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sanjeevani — Master Project Documentation</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 16mm 18mm 16mm;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1a221b;
+      line-height: 1.55;
+      font-size: 10.5pt;
+      margin: 0;
+      padding: 0;
+    }
+    .header-banner {
+      background: linear-gradient(135deg, #1b4d24 0%, #2f7a3e 100%);
+      color: #ffffff;
+      padding: 24px;
+      border-radius: 10px;
+      margin-bottom: 25px;
+    }
+    .header-banner h1 {
+      margin: 0 0 8px 0;
+      font-size: 24pt;
+      letter-spacing: -0.03em;
+    }
+    .header-banner p {
+      margin: 0;
+      font-size: 11pt;
+      opacity: 0.92;
+      line-height: 1.4;
+    }
+    h1, h2, h3, h4 {
+      color: #13381a;
+      font-weight: 700;
+      page-break-after: avoid;
+    }
+    h1 {
+      font-size: 18pt;
+      border-bottom: 2px solid #e1ebe0;
+      padding-bottom: 6px;
+      margin-top: 26px;
+      margin-bottom: 12px;
+    }
+    h2 {
+      font-size: 14pt;
+      border-bottom: 1px solid #edf2ec;
+      padding-bottom: 4px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+    h3 {
+      font-size: 12pt;
+      margin-top: 16px;
+      margin-bottom: 6px;
+    }
+    p, ul, ol {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    li {
+      margin-bottom: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 20px;
+      font-size: 9.5pt;
+      page-break-inside: avoid;
+    }
+    th, td {
+      border: 1px solid #d8e2d6;
+      padding: 7px 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f6ee;
+      color: #1a3c1e;
+      font-weight: 700;
+    }
+    tr:nth-child(even) {
+      background-color: #fafcfa;
+    }
+    pre {
+      background-color: #f4f7f3;
+      border: 1px solid #e2ece0;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: Consolas, "SFMono-Regular", "Liberation Mono", Menlo, monospace;
+      font-size: 9pt;
+      overflow-x: auto;
+      page-break-inside: avoid;
+      line-height: 1.4;
+    }
+    code {
+      font-family: Consolas, "SFMono-Regular", "Liberation Mono", Menlo, monospace;
+      font-size: 9pt;
+      background: #eff5ee;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #194e22;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+    blockquote {
+      border-left: 4px solid #3b874c;
+      margin: 12px 0;
+      padding: 8px 14px;
+      background: #f4faf2;
+      color: #264e2c;
+      font-size: 10pt;
+    }
+    hr {
+      border: 0;
+      border-top: 1px solid #e1eae0;
+      margin: 22px 0;
+    }
+    a {
+      color: #216d33;
+      text-decoration: none;
+    }
+    .footer-note {
+      margin-top: 35px;
+      padding-top: 12px;
+      border-top: 1px solid #dce5db;
+      font-size: 8pt;
+      color: #6a7c6e;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-banner">
+    <h1>🌿 Sanjeevani</h1>
+    <p>Delivering What Matters When It Matters.<br />Civic Micro-Logistics Platform for Perishable Surplus & Disaster Relief Coordination</p>
+  </div>
+  <h1>🌿 Sanjeevani — Master Project Documentation</h1>
+<blockquote>
+<p><strong>Delivering What Matters When It Matters.</strong>
+A Real-Time, Constraints-Driven Civic Micro-Logistics Platform for Perishable Food Surplus, Emergency Medical Supplies, and Disaster Relief Coordination.</p>
+</blockquote>
+<hr>
+<h2>📌 Table of Contents</h2>
+<ol>
+<li><a href="#1-project-overview--key-objectives">Project Overview &amp; Key Objectives</a></li>
+<li><a href="#2-live-links--repository-locations">Live Links &amp; Repository Locations</a></li>
+<li><a href="#3-system-architecture--invariants">System Architecture &amp; Invariants</a></li>
+<li><a href="#4-data-models--entities">Data Models &amp; Entities</a></li>
+<li><a href="#5-safety-first-allocation-engine">Safety-First Allocation Engine</a></li>
+<li><a href="#6-finite-state-machine--custody-lifecycle">Finite State Machine &amp; Custody Lifecycle</a></li>
+<li><a href="#7-security--session-architecture">Security &amp; Session Architecture</a></li>
+<li><a href="#8-complete-rest-api-reference">Complete REST API Reference</a></li>
+<li><a href="#9-user-guide-by-persona">User Guide by Persona</a></li>
+<li><a href="#10-rider-gps--turn-by-turn-navigation-map">Rider GPS &amp; Turn-by-Turn Navigation Map</a></li>
+<li><a href="#11-scenario-lab--chaos-engineering">Scenario Lab &amp; Chaos Engineering</a></li>
+<li><a href="#12-deployment--devops-manual">Deployment &amp; DevOps Manual</a></li>
+<li><a href="#13-local-development--verification-testing">Local Development &amp; Verification Testing</a></li>
+</ol>
+<hr>
+<h2>1. Project Overview &amp; Key Objectives</h2>
+<p>During civic emergencies, daily hotel/canteen operations, and disaster relief events, massive quantities of freshly prepared hot food, emergency rations, and temperature-sensitive medicines are lost simply because coordination fails before shelf-life expires. </p>
+<p>Traditional logistics apps treat deliveries as unconstrained point-to-point courier jobs. <strong>Sanjeevani</strong> treats them as <strong>safety-critical mathematical constraints</strong>:</p>
+<ul>
+<li>Perishable hot meals have strict 45–120 minute safe-use windows.</li>
+<li>Cold-chain medical kits require specific storage handling.</li>
+<li>Volunteer riders have vehicle payload limits and fluctuating availability.</li>
+<li>Night shelters and relief camps have strict intake capacities, dynamic needs, and utility requirements (clean water and cooking fuel).</li>
+</ul>
+<p>Sanjeevani bridges this gap through a high-frequency, responsive web platform featuring:</p>
+<ul>
+<li><strong>Safety-First Allocation Engine</strong>: Automatically computes route viability against shelf-life countdowns.</li>
+<li><strong>Turn-by-Turn Rider Navigation</strong>: Dedicated HUD with live route polylines, radar beacon, and step-by-step handoff actions.</li>
+<li><strong>1-Click Workspace Role Switcher</strong>: Instant evaluation of all four operational personas without logging out.</li>
+<li><strong>Real-Time Cross-Device Synchronization</strong>: Instant updates via Server-Sent Events (SSE).</li>
+</ul>
+<hr>
+<h2>2. Live Links &amp; Repository Locations</h2>
+<ul>
+<li><strong>Production Web Application</strong>: <a href="https://sanjeevani-henna-alpha.vercel.app">https://sanjeevani-henna-alpha.vercel.app</a></li>
+<li><strong>GitHub Repository</strong>: <a href="https://github.com/shauryawankhade1923-creator/sanjeevani">https://github.com/shauryawankhade1923-creator/sanjeevani</a></li>
+<li><strong>Local Workspace</strong>: <code>C:\Users\SHAURYA\Downloads\Sanjeevani-main\Sanjeevani-main</code></li>
+<li><strong>Simulated Region</strong>: Pune &amp; Alandi, Maharashtra, India (<code>18.588° N, 73.899° E</code>)</li>
+</ul>
+<hr>
+<h2>3. System Architecture &amp; Invariants</h2>
+<pre><code class="language-mermaid">graph TD
+    subgraph Client [&quot;Client Layer (Responsive SPA)&quot;]
+        Browser[&quot;Desktop &amp; Mobile Browsers&quot;]
+        Leaflet[&quot;Leaflet.js 1.9.4 + OpenStreetMap&quot;]
+        SSE_Client[&quot;SSE EventSource Stream &amp; Polling&quot;]
+    end
+
+    subgraph Serverless [&quot;Edge / Serverless Runtime (Vercel)&quot;]
+        Gateway[&quot;api/index.js (Catch-All Serverless Bridge)&quot;]
+        ServerCore[&quot;server.js (Node.js Dispatch Core)&quot;]
+        SessionAuth[&quot;HMAC-SHA256 Signed Cookie Auth&quot;]
+    end
+
+    subgraph CoreEngine [&quot;Core Engine Modules&quot;]
+        Allocation[&quot;Safety-First Allocation Engine&quot;]
+        LeaseManager[&quot;Reservation Lease &amp; Expiry Watcher&quot;]
+        Reassessment[&quot;Dynamic Reassessment &amp; Rerouting&quot;]
+        EventBus[&quot;Pub/Sub Event Bus &amp; Audit Logger&quot;]
+    end
+
+    subgraph StorageLayer [&quot;Persistence Layer&quot;]
+        JSONStore[&quot;data/sanjeevani.json (Seed &amp; Local State)&quot;]
+        Supabase[&quot;Supabase PostgreSQL + RLS (Production Target)&quot;]
+    end
+
+    Browser --&gt;|HTTPS REST| Gateway
+    Browser --&gt;|Text/Event-Stream| Gateway
+    Gateway --&gt; ServerCore
+    ServerCore --&gt; SessionAuth
+    ServerCore --&gt; Allocation
+    ServerCore --&gt; LeaseManager
+    ServerCore --&gt; Reassessment
+    ServerCore --&gt; EventBus
+    ServerCore --&gt; JSONStore
+    ServerCore -.-&gt;|Migration Ready| Supabase
+</code></pre>
+<h3>Key Architectural Invariants:</h3>
+<ol>
+<li><strong>Never allocate unsafe surplus</strong>: If total estimated arrival time plus a 15-minute safety buffer exceeds the food&#39;s safe-use deadline, the system hard-rejects the match.</li>
+<li><strong>Exactly-once reservation release</strong>: Reservation offers expire after 5 minutes if unacknowledged by the rider; reserved quantities automatically return to the open surplus pool.</li>
+<li><strong>Stateless serverless continuity</strong>: Authentication relies on HMAC-SHA256 signed cookies rather than in-memory server maps, ensuring zero session loss during serverless cold starts.</li>
+</ol>
+<hr>
+<h2>4. Data Models &amp; Entities</h2>
+<pre><code>┌────────────────┐       1..* ┌────────────────┐
+│   Donation     │ ────────── │    Shipment    │
+└────────────────┘            └────────────────┘
+                                  │          │
+                     assigned to  │          │ delivered to
+                                  ▼          ▼
+                        ┌─────────────┐  ┌─────────────┐
+                        │    Rider    │  │   Center    │
+                        └─────────────┘  └─────────────┘
+                                                │ 1..* has
+                                                ▼
+                                         ┌─────────────┐
+                                         │   Demand    │
+                                         └─────────────┘
+</code></pre>
+<h3>Entity Schemas:</h3>
+<ul>
+<li><strong>Donation</strong>: <code>id</code>, <code>donorId</code>, <code>donorName</code>, <code>title</code>, <code>category</code>, <code>originalQuantity</code>, <code>availableQuantity</code>, <code>reservedQuantity</code>, <code>pickedUpQuantity</code>, <code>deliveredQuantity</code>, <code>safeUntil</code>, <code>storage</code>, <code>handling</code>, <code>pickupLocation</code> (<code>name</code>, <code>address</code>, <code>lat</code>, <code>lng</code>), <code>status</code>.</li>
+<li><strong>Center</strong>: <code>id</code>, <code>name</code>, <code>type</code>, <code>address</code>, <code>lat</code>, <code>lng</code>, <code>isOpen</code>, <code>capacity</code>, <code>occupancy</code>, <code>water</code>, <code>fuel</code>, <code>receivingHours</code>.</li>
+<li><strong>Demand</strong>: <code>id</code>, <code>centerId</code>, <code>category</code>, <code>unit</code>, <code>quantity</code>, <code>priority</code>, <code>acceptedCategories</code>.</li>
+<li><strong>Rider</strong>: <code>id</code>, <code>name</code>, <code>phone</code>, <code>vehicle</code>, <code>capacity</code>, <code>capacityReserved</code>, <code>availability</code>, <code>lat</code>, <code>lng</code>, <code>lastSeenAt</code>, <code>reliability</code>, <code>userId</code>.</li>
+<li><strong>Shipment</strong>: <code>id</code>, <code>donationId</code>, <code>riderId</code>, <code>centerId</code>, <code>quantity</code>, <code>unit</code>, <code>status</code>, <code>offeredAt</code>, <code>acceptedAt</code>, <code>pickedUpAt</code>, <code>inTransitAt</code>, <code>deliveredAt</code>, <code>etaAt</code>, <code>reservationExpiresAt</code>, <code>delayMinutes</code>, <code>safeUntil</code>.</li>
+</ul>
+<hr>
+<h2>5. Safety-First Allocation Engine</h2>
+<p>The allocation engine (<code>autoDispatch</code> / <code>POST /api/admin/allocate-best</code>) validates 7 sequential safety constraints before proposing a shipment:</p>
+<p>$$\text{ETA} = T_{\text{current}} + \text{Transit}(\text{Rider} \to \text{Pickup}) + \text{LoadTime} + \text{Transit}(\text{Pickup} \to \text{Center}) + \text{Buffer}$$</p>
+<ol>
+<li><strong>Center Status Check</strong>: Center must be explicitly <code>isOpen === true</code>.</li>
+<li><strong>Category Compatibility</strong>: Center <code>acceptedCategories</code> must include the donation category.</li>
+<li><strong>Capacity Threshold</strong>: Center <code>occupancy + quantity &lt;= capacity</code>.</li>
+<li><strong>Demand Matching</strong>: Center has positive unfulfilled demand (<code>demand.quantity &gt;= quantity</code>).</li>
+<li><strong>Rider Capacity</strong>: Available rider payload <code>(capacity - capacityReserved) &gt;= quantity</code>.</li>
+<li><strong>Utility Readiness</strong>: Perishable cooking/refrigeration items require operational water/fuel.</li>
+<li><strong>Strict Expiry Invariant</strong>:
+$$\text{ETA} + 15\text{ minutes} &lt; \text{Donation.safeUntil}$$</li>
+</ol>
+<hr>
+<h2>6. Finite State Machine &amp; Custody Lifecycle</h2>
+<pre><code class="language-mermaid">stateDiagram-v2
+    [*] --&gt; offered: Admin Allocation or Auto-Match
+    offered --&gt; reserved: Rider Accepts Offer
+    offered --&gt; available: Rider Declines OR Lease Expires (5 min)
+    
+    reserved --&gt; pickup_confirmed: Rider Arrives at Pickup Location
+    pickup_confirmed --&gt; picked_up: Cargo Loaded &amp; Verified
+    
+    picked_up --&gt; in_transit: Rider Begins Trip to Shelter
+    in_transit --&gt; delayed: Traffic / Obstruction Reported (+15m)
+    delayed --&gt; in_transit: Delay Acknowledged / Resumed
+    
+    in_transit --&gt; delivered: Shelter Confirms Receipt (Handoff Complete)
+    in_transit --&gt; rerouted: Shelter Closes Mid-Route (Auto-Fallback)
+    rerouted --&gt; in_transit: New Shelter Target Assigned
+    
+    delivered --&gt; [*]
+</code></pre>
+<hr>
+<h2>7. Security &amp; Session Architecture</h2>
+<ul>
+<li><strong>Session Signing</strong>: Sessions are encoded as base64 JSON and signed with an HMAC-SHA256 signature using <code>SESSION_SECRET</code>.</li>
+<li><strong>Cookie Security</strong>: <code>Set-Cookie: sanjeevani_session=...; Path=/; HttpOnly; SameSite=Lax</code>.</li>
+<li><strong>Role-Based Access Control (RBAC)</strong>:<ul>
+<li><code>admin</code>: Global access, manual allocation, scenario lab triggers, database reset.</li>
+<li><code>donor</code>: Donation creation, donor-specific metrics.</li>
+<li><code>rider</code>: Responding to offers, updating GPS coordinates (<code>POST /api/riders/me</code>), transit state transitions.</li>
+<li><code>shelter</code>: Demand updates, center capacity/status toggling, delivery handoff confirmations.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>8. Complete REST API Reference</h2>
+<table>
+<thead>
+<tr>
+<th align="left">Method</th>
+<th align="left">Endpoint</th>
+<th align="left">Access</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>POST</code></td>
+<td align="left"><code>/api/auth/login</code></td>
+<td align="left">Public</td>
+<td align="left">Authenticates user; returns user object and signed cookie.</td>
+</tr>
+<tr>
+<td align="left"><code>POST</code></td>
+<td align="left"><code>/api/auth/switch</code></td>
+<td align="left">Authenticated</td>
+<td align="left">1-click workspace switcher to another role (<code>admin</code>, <code>donor</code>, <code>rider</code>, <code>shelter</code>).</td>
+</tr>
+<tr>
+<td align="left"><code>POST</code></td>
+<td align="left"><code>/api/auth/logout</code></td>
+<td align="left">Authenticated</td>
+<td align="left">Clears session cookie.</td>
+</tr>
+<tr>
+<td align="left"><code>GET</code></td>
+<td align="left"><code>/api/auth/me</code></td>
+<td align="left">Authenticated</td>
+<td align="left">Returns current authenticated user profile.</td>
+</tr>
+<tr>
+<td align="left"><code>GET</code></td>
+<td align="left"><code>/api/state</code></td>
+<td align="left">Authenticated</td>
+<td align="left">Scoped snapshot of network shipments, centers, riders, and metrics.</td>
+</tr>
+<tr>
+<td align="left"><code>GET</code></td>
+<td align="left"><code>/api/events/stream</code></td>
+<td align="left">Public/Auth</td>
+<td align="left">Server-Sent Events (SSE) push stream for real-time updates.</td>
+</tr>
+<tr>
+<td align="left"><code>POST</code></td>
+<td align="left"><code>/api/donations</code></td>
+<td align="left"><code>donor</code>, <code>admin</code></td>
+<td align="left">Creates a new surplus donation batch with safe-use expiry.</td>
+</tr>
+<tr>
+<td align="left"><code>POST</code></td>
+<td align="left"><code>/api/admin/allocate-best</code></td>
+<td align="left"><code>admin</code></td>
+<td align="left">Runs safety allocation engine for a specified donation ID.</td>
+</tr>
+<tr>
+<td align="left"><code>POST</code></td>
+<td align="left"><code>/api/shipments/:id/:action</code></td>
+<td align="left">Role-protected</td>
+<td align="left">Advances shipment status (<code>accept</code>, <code>reject</code>, <code>pickup-arrived</code>, <code>picked-up</code>, <code>in-transit</code>, <code>report-delay</code>, <code>delivered</code>).</td>
+</tr>
+<tr>
+<td align="left"><code>POST</code></td>
+<td align="left"><code>/api/riders/me</code></td>
+<td align="left"><code>rider</code></td>
+<td align="left">Updates rider GPS (<code>lat</code>, <code>lng</code>) and availability (<code>available</code>, <code>on_delivery</code>, <code>offline</code>).</td>
+</tr>
+<tr>
+<td align="left"><code>POST</code></td>
+<td align="left"><code>/api/centers/:id/status</code></td>
+<td align="left"><code>shelter</code>, <code>admin</code></td>
+<td align="left">Toggles center open/closed state; auto-reroutes affected deliveries.</td>
+</tr>
+<tr>
+<td align="left"><code>POST</code></td>
+<td align="left"><code>/api/centers/:id/demand</code></td>
+<td align="left"><code>shelter</code>, <code>admin</code></td>
+<td align="left">Updates center demand quantity for a specific category.</td>
+</tr>
+<tr>
+<td align="left"><code>POST</code></td>
+<td align="left"><code>/api/admin/scenario</code></td>
+<td align="left"><code>admin</code></td>
+<td align="left">Triggers Scenario Lab tests (<code>urgent</code>, <code>split</code>, <code>no-show</code>, <code>advance-time</code>, <code>closure</code>, <code>delay</code>, <code>movement</code>, <code>reset</code>).</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>9. User Guide by Persona</h2>
+<h3>Quick Credentials:</h3>
+<p>All demo profiles share the password: <strong><code>SanjeevaniDemo!2026</code></strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">Role</th>
+<th align="left">Email</th>
+<th align="left">Best For</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Administrator</strong></td>
+<td align="left"><code>admin@demo.sanjeevani.app</code></td>
+<td align="left">Dispatch operations, auto-matching, chaos testing</td>
+</tr>
+<tr>
+<td align="left"><strong>Surplus Donor</strong></td>
+<td align="left"><code>donor@demo.sanjeevani.app</code></td>
+<td align="left">Posting surplus food and medical batches</td>
+</tr>
+<tr>
+<td align="left"><strong>Volunteer Rider</strong></td>
+<td align="left"><code>rider@demo.sanjeevani.app</code></td>
+<td align="left">Turn-by-turn navigation, GPS stepping, package delivery</td>
+</tr>
+<tr>
+<td align="left"><strong>Receiving Center</strong></td>
+<td align="left"><code>shelter@demo.sanjeevani.app</code></td>
+<td align="left">Requesting aid, updating demand, confirming receipts</td>
+</tr>
+</tbody></table>
+<p><em>(Use the topbar profile chip to switch roles instantly with a single click!)</em></p>
+<hr>
+<h2>10. Rider GPS &amp; Turn-by-Turn Navigation Map</h2>
+<p>When logged in as a <strong>Volunteer Rider</strong>, clicking <strong>&quot;My map&quot;</strong> opens the dedicated navigation terminal:</p>
+<ol>
+<li><strong>Turn-by-Turn HUD</strong>:<ul>
+<li>Live status badge (<em>Heading to Pickup</em>, <em>Cargo Loaded</em>, <em>In Transit</em>, <em>Delayed</em>).</li>
+<li>Safe-use countdown clock showing time remaining before cargo expires.</li>
+<li>Sequential step cards for Pickup Location ➔ Dropoff Shelter ➔ Payload Details.</li>
+</ul>
+</li>
+<li><strong>Interactive Leaflet Map</strong>:<ul>
+<li><strong>🛵 You (Rider GPS)</strong>: Glowing radar beacon pin with live coordinates.</li>
+<li><strong>📦 Pickup Pin</strong>: Donor location with quantity and safe shelf-life details.</li>
+<li><strong>🏥 Destination Pin</strong>: Receiving center with address and operating hours.</li>
+<li><strong>Route Polylines</strong>: Vibrant animated dashed emerald polyline for active legs and muted lines for upcoming hops.</li>
+</ul>
+</li>
+<li><strong>GPS Controls</strong>:<ul>
+<li><strong>⚡ Step GPS Along Route</strong>: Advances the rider 35% closer towards the active waypoint and updates the server via <code>POST /api/riders/me</code>. Alerts rider upon arrival within 200m.</li>
+<li><strong>🎯 Center On Me</strong>: Instantly flies the camera to the rider&#39;s position.</li>
+<li><strong>Patrol Mode</strong>: Advances patrol GPS beacon when idle.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>11. Scenario Lab &amp; Chaos Engineering</h2>
+<p>Accessible under <strong>Administrator &gt; Scenario Lab</strong>:</p>
+<ul>
+<li><strong>Create Urgent Donation</strong>: Injects a 180-meal batch with an aggressive 35-minute deadline.</li>
+<li><strong>Split Batch</strong>: Divides large batches across multiple riders and shelters.</li>
+<li><strong>Simulate Rider No-Show</strong>: Forces a reservation lease to expire and verifies automatic return to open surplus.</li>
+<li><strong>Advance Simulation Clock</strong>: Advances time by 10 minutes to test countdown timers.</li>
+<li><strong>Close Shelter Mid-Route</strong>: Simulates emergency shelter closure and triggers automatic rerouting to candidate centers.</li>
+<li><strong>Simulate Route Delay</strong>: Injects a 25-minute delay and tests attention board escalation.</li>
+<li><strong>Reset Demo Data</strong>: Reverts state back to clean initial demo baseline.</li>
+</ul>
+<hr>
+<h2>12. Deployment &amp; DevOps Manual</h2>
+<h3>Production on Vercel:</h3>
+<ul>
+<li><strong>Serverless Entrypoint</strong>: <code>api/index.js</code> wraps <code>server.js</code> as an asynchronous catch-all serverless function.</li>
+<li><strong>Static Asset Serving</strong>: Handled at edge via <code>public/</code>.</li>
+<li><strong>Deploy Command</strong>: <code>vercel --prod --yes</code></li>
+</ul>
+<h3>Environment Variables:</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Key</th>
+<th align="left">Purpose</th>
+<th align="left">Required</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>NODE_ENV</code></td>
+<td align="left">Environment flag (<code>production</code> or <code>development</code>)</td>
+<td align="left">No</td>
+</tr>
+<tr>
+<td align="left"><code>SESSION_SECRET</code></td>
+<td align="left">Secret key used to sign HMAC-SHA256 session cookies</td>
+<td align="left"><strong>Yes</strong></td>
+</tr>
+<tr>
+<td align="left"><code>DEMO_PASSWORD</code></td>
+<td align="left">Shared password for the 4 demo accounts</td>
+<td align="left">No (has fallback)</td>
+</tr>
+<tr>
+<td align="left"><code>SUPABASE_URL</code></td>
+<td align="left">Supabase instance URL (for persistent DB cutover)</td>
+<td align="left">Optional</td>
+</tr>
+<tr>
+<td align="left"><code>SUPABASE_SERVICE_ROLE_KEY</code></td>
+<td align="left">Supabase administrative key</td>
+<td align="left">Optional</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>13. Local Development &amp; Verification Testing</h2>
+<pre><code class="language-bash"># 1. Clone repository
+git clone https://github.com/shauryawankhade1923-creator/sanjeevani.git
+cd sanjeevani
+
+# 2. Syntax check
+npm run check
+
+# 3. Start development server
+npm run dev
+</code></pre>
+<h3>Running Automated Smoke Tests:</h3>
+<pre><code class="language-bash"># Test against production
+$env:BASE_URL = &quot;https://sanjeevani-henna-alpha.vercel.app&quot;
+node scripts/smoke-test.js
+</code></pre>
+<p>Expected output:</p>
+<pre><code class="language-text">Sanjeevani smoke test passed: auth, shared donation, role protection, and scenario mutation.
+</code></pre>
+
+
+  <div class="footer-note">
+    Sanjeevani Master Project Documentation · Generated for Production Deployment · https://sanjeevani-henna-alpha.vercel.app
+  </div>
+</body>
+</html>

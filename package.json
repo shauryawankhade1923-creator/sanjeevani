@@ -8,7 +8,9 @@
     "start": "node server.js",
     "seed": "node scripts/seed-local.js",
     "seed:supabase": "node scripts/seed-supabase.mjs",
-    "check": "node --check server.js && node --check public/app.js && node --check scripts/smoke-test.js",
+    "check": "node --check server.js && node --check public/app.js && node --check scripts/smoke-test.js && node --check scripts/generate-pdf.js",
+    "pdf": "node scripts/generate-pdf.js",
+    "test": "node scripts/smoke-test.js",
     "test:smoke": "node scripts/smoke-test.js"
   },
   "engines": {
