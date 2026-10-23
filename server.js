@@ -42,10 +42,14 @@ function iso(date) { return new Date(date).toISOString(); }
 function addMinutes(date, minutes) { return iso(new Date(new Date(date).getTime() + minutes * 60000)); }
 function minutesBetween(later, earlier) { return Math.round((new Date(later) - new Date(earlier)) / 60000); }
 function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+function getSimulationNow() {
+  const offset = Number(db?.settings?.timeOffsetMinutes || 0);
+  return iso(Date.now() + offset * 60000);
+}
 
 function seedDatabase() {
-  const createdAt = iso(Date.now() - 1000 * 60 * 50);
   const simNow = iso(Date.now());
+  const createdAt = iso(Date.now() - 1000 * 60 * 50);
   const password = hashPassword(DEMO_PASSWORD);
   const profiles = [
     { id: 'profile-admin', authUserId: 'auth-admin', email: 'admin@demo.sanjeevani.app', name: 'Riya Kapoor', role: 'admin', entityId: 'network-1' },
@@ -90,7 +94,7 @@ function seedDatabase() {
     { id: id('event'), type: 'shipment.in_transit', message: '40 meals are moving to Night Shelter A', actorId: 'auth-rider', createdAt: addMinutes(simNow, -2), metadata: { shipmentId: 'shipment-1', seeded: true } },
     { id: id('event'), type: 'assignment.offered', message: 'Reservation needs a check-in', actorId: 'auth-admin', createdAt: addMinutes(simNow, -4), metadata: { shipmentId: 'shipment-3', seeded: true } }
   ];
-  return { version: 1, settings: { simulationNow: simNow, seedVersion: 1 }, users, profiles, centers, demands, riders, donations, shipments, events };
+  return { version: 1, settings: { simulationNow: simNow, timeOffsetMinutes: 0, seedVersion: 1 }, users, profiles, centers, demands, riders, donations, shipments, events };
 }
 
 function loadDatabase() {
@@ -250,15 +254,21 @@ function releaseShipment(shipment, type, message) {
 }
 
 function calculateMetrics() {
+  if (db?.settings) {
+    db.settings.simulationNow = getSimulationNow();
+  }
   const delivered = db.donations.reduce((sum, donation) => sum + donation.deliveredQuantity, 0);
   const wasted = db.donations.reduce((sum, donation) => sum + donation.expiredQuantity, 0);
   const active = db.shipments.filter((shipment) => !['delivered', 'cancelled', 'expired'].includes(shipment.status)).length;
   const attention = db.shipments.filter((shipment) => ['offered', 'delayed', 'unsafe'].includes(shipment.status)).length;
   const completed = db.shipments.filter((shipment) => shipment.status === 'delivered');
-  return { activeShipments: active, needsAttention: attention, mealsRescued: delivered, unitsDelivered: delivered, unitsWasted: wasted, onTimeRate: completed.length ? Math.round(completed.filter((shipment) => !shipment.delayMinutes).length / completed.length * 100) : 100, openDemand: db.demands.reduce((sum, demand) => sum + demand.quantity, 0), totalDonations: db.donations.length, availableUnits: db.donations.reduce((sum, donation) => sum + donation.availableQuantity, 0), simulationNow: db.settings.simulationNow };
+  return { activeShipments: active, needsAttention: attention, mealsRescued: delivered, unitsDelivered: delivered, unitsWasted: wasted, onTimeRate: completed.length ? Math.round(completed.filter((shipment) => !shipment.delayMinutes).length / completed.length * 100) : 100, openDemand: db.demands.reduce((sum, demand) => sum + demand.quantity, 0), totalDonations: db.donations.length, availableUnits: db.donations.reduce((sum, donation) => sum + donation.availableQuantity, 0), simulationNow: db?.settings?.simulationNow || getSimulationNow() };
 }
 
 function stateFor(user) {
+  if (db?.settings) {
+    db.settings.simulationNow = getSimulationNow();
+  }
   expireOffers();
   const visibleDonations = db.donations.filter((donation) => donationForUser(donation, user));
   const visibleShipments = db.shipments.filter((shipment) => shipmentVisible(shipment, user));
@@ -266,7 +276,7 @@ function stateFor(user) {
   const visibleCenters = isRole(user, 'admin') ? db.centers : (user.role === 'shelter' ? db.centers.filter((center) => center.id === user.entityId) : db.centers);
   const visibleDemands = isRole(user, 'admin') ? db.demands : (user.role === 'shelter' ? db.demands.filter((demand) => demand.centerId === user.entityId) : db.demands);
   const events = isRole(user, 'admin') ? db.events.slice(0, 50) : db.events.filter((event) => event.actorId === user.authUserId || visibleShipments.some((shipment) => event.metadata?.shipmentId === shipment.id) || visibleDonations.some((donation) => event.metadata?.donationId === donation.id)).slice(0, 30);
-  return { user: publicProfile(user), donations: visibleDonations, shipments: visibleShipments, riders: visibleRiders, centers: visibleCenters, demands: visibleDemands, events, metrics: calculateMetrics(), mode: 'local-demo', supabaseConfigured: Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY), demoPasswordConfigured: Boolean(process.env.DEMO_PASSWORD) };
+  return { user: publicProfile(user), settings: db.settings, donations: visibleDonations, shipments: visibleShipments, riders: visibleRiders, centers: visibleCenters, demands: visibleDemands, events, metrics: calculateMetrics(), mode: 'local-demo', supabaseConfigured: Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY), demoPasswordConfigured: Boolean(process.env.DEMO_PASSWORD) };
 }
 
 async function body(req) {
@@ -471,7 +481,7 @@ function autoDispatch(donation, actorId) {
 
 function runScenario(scenario, actorId) {
   if (scenario === 'reset') { db = seedDatabase(); return { message: 'Demo reset to the seeded network.', state: stateFor(db.profiles.find((profile) => profile.role === 'admin')) }; }
-  if (scenario === 'advance-time') { db.settings.simulationNow = addMinutes(db.settings.simulationNow, 10); expireOffers(); recordEvent('simulation.advanced', 'Simulation clock advanced by 10 minutes', actorId, { minutes: 10 }); return { message: 'Simulation clock advanced by 10 minutes.' }; }
+  if (scenario === 'advance-time') { db.settings.timeOffsetMinutes = (Number(db.settings.timeOffsetMinutes) || 0) + 10; db.settings.simulationNow = getSimulationNow(); expireOffers(); recordEvent('simulation.advanced', 'Simulation clock advanced by 10 minutes', actorId, { minutes: 10 }); return { message: 'Simulation clock advanced by 10 minutes.', simulationNow: db.settings.simulationNow }; }
   if (scenario === 'urgent') { const donation = { id: id('donation'), donorId: 'donor-1', donorName: 'Banquet Hall South', title: 'Urgent 180-meal demo batch', category: 'Cooked meals', quantity: 180, unit: 'meals', originalQuantity: 180, availableQuantity: 180, reservedQuantity: 0, pickedUpQuantity: 0, deliveredQuantity: 0, expiredQuantity: 0, availableAt: db.settings.simulationNow, safeUntil: addMinutes(db.settings.simulationNow, 35), pickupLocation: { name: 'Banquet Hall South', address: 'Kharadi Bypass, Pune', lat: 18.575, lng: 73.91 }, storage: 'Room temperature', handling: 'Immediate pickup required', pickupWindow: 'Ready now', notes: 'Created by Scenario Lab', status: 'available', createdAt: db.settings.simulationNow, seeded: false }; db.donations.unshift(donation); recordEvent('scenario.urgent_created', 'Urgent 180-meal batch created for scenario testing', actorId, { donationId: donation.id }); return { message: 'Urgent 180-meal batch created.', donation }; }
   if (scenario === 'split') { let donation = db.donations.find((item) => item.title === 'Urgent 180-meal demo batch' && item.availableQuantity > 0); if (!donation) { const created = runScenario('urgent', actorId); donation = created.donation; } const result = autoDispatch(donation, actorId); return { message: `Batch split into ${result.created.length} safe rider-sized allocation(s).`, ...result }; }
   if (scenario === 'no-show') { const shipment = db.shipments.find((item) => item.status === 'offered'); if (!shipment) return { error: 'No active offered reservation is available to expire.' }; releaseShipment(shipment, 'reservation.expired', 'Scenario Lab expired the rider offer after a no-show'); return { message: 'Rider offer expired; reserved quantity returned to the open pool.', shipmentId: shipment.id }; }

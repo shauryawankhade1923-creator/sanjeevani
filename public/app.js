@@ -33,9 +33,42 @@ async function init() {
   operationsTemplate = $('#workspace-root')?.innerHTML || '';
   await loadConfig();
   bindStaticListeners();
+  startLiveClock();
   const me = await api('/api/me', { silent: true });
   if (me?.user) await enterApp(me.user);
   else showLogin();
+}
+
+function startLiveClock() {
+  function tick() {
+    const clock = $('#clock-time');
+    if (clock) {
+      const now = new Date();
+      const offsetMs = (Number(appState?.settings?.timeOffsetMinutes) || 0) * 60000;
+      const displayDate = new Date(now.getTime() + offsetMs);
+      clock.textContent = displayDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+  }
+  tick();
+  if (!window._liveClockInterval) {
+    window._liveClockInterval = setInterval(tick, 1000);
+  }
+}
+
+function updateHeroHeader() {
+  const eyebrow = $('.eyebrow');
+  if (eyebrow) {
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('en-GB', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    const hours = now.getHours();
+    const shift = hours < 12 ? 'Morning shift' : hours < 17 ? 'Afternoon shift' : 'Evening shift';
+    eyebrow.innerHTML = `<span class="eyebrow-line"></span> ${formattedDate} · ${shift}`;
+  }
 }
 
 async function loadConfig() {
@@ -448,10 +481,8 @@ function pageTitle(page) {
 function renderCurrentPage() {
   if (!appState) return;
 
-  const clock = $('#clock-time');
-  if (clock && appState.metrics?.simulationNow) {
-    clock.textContent = formatTime(appState.metrics.simulationNow);
-  }
+  startLiveClock();
+  updateHeroHeader();
   const notifBadge = $('.notification-badge');
   if (notifBadge && appState.metrics) {
     notifBadge.textContent = appState.metrics.needsAttention || '0';
