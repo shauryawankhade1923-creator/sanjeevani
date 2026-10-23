@@ -1,5 +1,5 @@
-const server = require('../server.js');
+const handleRequest = require('../server.js');
 
-module.exports = (req, res) => {
-  server.emit('request', req, res);
+module.exports = async (req, res) => {
+  await handleRequest(req, res);
 };

@@ -369,19 +369,31 @@ function runScenario(scenario, actorId) {
 function serveStatic(req, res, pathname) {
   let relative = decodeURIComponent(pathname === '/' ? '/index.html' : pathname);
   if (relative.includes('..')) return fail(res, 400, 'Invalid path');
-  const file = path.join(ROOT, relative);
+  let file = path.join(ROOT, relative);
+  if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+    file = path.join(ROOT, 'public', relative);
+  }
   if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) return fail(res, 404, 'File not found');
   res.writeHead(200, { 'Content-Type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' }); fs.createReadStream(file).pipe(res);
 }
 
-const server = http.createServer(async (req, res) => {
-  try { const parsed = new URL(req.url, `http://${req.headers.host || 'localhost'}`); if (parsed.pathname.startsWith('/api/')) return await api(req, res, parsed.pathname); return serveStatic(req, res, parsed.pathname); }
-  catch (error) { console.error(error); if (!res.headersSent) fail(res, 500, 'Unexpected server error'); }
-});
+async function handleRequest(req, res) {
+  try {
+    const parsed = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    if (parsed.pathname.startsWith('/api/')) return await api(req, res, parsed.pathname);
+    return serveStatic(req, res, parsed.pathname);
+  } catch (error) {
+    console.error(error);
+    if (!res.headersSent) fail(res, 500, 'Unexpected server error');
+  }
+}
+
+const server = http.createServer(handleRequest);
 
 if (!process.env.VERCEL) {
   setInterval(() => expireOffers(), 5000);
   server.listen(PORT, () => console.log(`Sanjeevani server running at http://localhost:${PORT}`));
 }
 
-module.exports = server;
+module.exports = handleRequest;
+module.exports.server = server;
