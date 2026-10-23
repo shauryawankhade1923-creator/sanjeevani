@@ -18,6 +18,17 @@ let realtimePollInterval = null;
 
 document.addEventListener('DOMContentLoaded', init);
 
+window.addEventListener('popstate', (event) => {
+  if (event.state?.page) {
+    setPage(event.state.page, false);
+  } else {
+    const hash = window.location.hash.replace('#', '');
+    if (hash && appState) {
+      setPage(hash, false);
+    }
+  }
+});
+
 async function init() {
   operationsTemplate = $('#workspace-root')?.innerHTML || '';
   await loadConfig();
@@ -51,6 +62,28 @@ async function api(url, options = {}) {
 
 function bindStaticListeners() {
   document.addEventListener('click', (event) => {
+    // Switch role from switcher dropdown
+    const switchItem = event.target.closest('[data-switch-role]');
+    if (switchItem) {
+      event.preventDefault();
+      switchRole(switchItem.dataset.switchRole);
+      return;
+    }
+
+    // Toggle switcher dropdown
+    const switchToggle = event.target.closest('#workspace-switcher') || event.target.closest('#topbar-switch-btn') || event.target.closest('#switcher-toggle-btn');
+    if (switchToggle && !event.target.closest('.switcher-dropdown')) {
+      const dd = $('#switcher-dropdown');
+      if (dd) dd.hidden = !dd.hidden;
+      return;
+    }
+
+    // Close switcher dropdown on outside click
+    if (!event.target.closest('#workspace-switcher') && !event.target.closest('#topbar-switch-btn')) {
+      const dd = $('#switcher-dropdown');
+      if (dd && !dd.hidden) dd.hidden = true;
+    }
+
     const logout = event.target.closest('[data-logout]');
     if (logout) {
       logoutUser();
@@ -113,6 +146,27 @@ function bindStaticListeners() {
 
   window.addEventListener('click', (event) => { if (event.target.id === 'batch-modal') closeDonationModal(); });
   window.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeDonationModal(); });
+}
+
+async function switchRole(targetRole) {
+  const dd = $('#switcher-dropdown');
+  if (dd) dd.hidden = true;
+  if (appState?.user?.role === targetRole) {
+    showToast(`Already active as ${roleLabel[targetRole] || targetRole}`);
+    return;
+  }
+  showToast(`Switching to ${roleLabel[targetRole] || targetRole}…`);
+  const result = await api('/api/auth/switch', {
+    method: 'POST',
+    body: JSON.stringify({ role: targetRole }),
+    silent: true
+  });
+  if (result?.user) {
+    await enterApp(result.user);
+    showToast(`Active role: ${roleLabel[targetRole] || targetRole}`);
+  } else {
+    showToast('Failed to switch role', true);
+  }
 }
 
 function showLogin(errorMessage = '') {
@@ -273,6 +327,29 @@ function configureShell() {
   const scenario = $('#sidebar-scenario');
   if (scenario) scenario.hidden = role !== 'admin';
 
+  // Workspace Switcher title & subtitle & avatar
+  const wsAvatar = $('#workspace-avatar');
+  const wsTitle = $('#workspace-title');
+  const wsSub = $('#workspace-subtitle');
+  if (role === 'admin') {
+    if (wsAvatar) wsAvatar.textContent = 'MC';
+    if (wsTitle) wsTitle.textContent = 'Metro Civic Network';
+    if (wsSub) wsSub.textContent = 'Operations team';
+  } else if (role === 'donor') {
+    if (wsAvatar) wsAvatar.textContent = 'AF';
+    if (wsTitle) wsTitle.textContent = 'Aarav Foods';
+    if (wsSub) wsSub.textContent = 'Food Donor Workspace';
+  } else if (role === 'rider') {
+    if (wsAvatar) wsAvatar.textContent = 'AM';
+    if (wsTitle) wsTitle.textContent = 'Aarav Mehta Logistics';
+    if (wsSub) wsSub.textContent = 'Volunteer Rider Desk';
+  } else if (role === 'shelter') {
+    if (wsAvatar) wsAvatar.textContent = 'NS';
+    if (wsTitle) wsTitle.textContent = 'Night Shelter A';
+    if (wsSub) wsSub.textContent = 'Receiving Center Desk';
+  }
+
+  // User profile in sidebar
   const initials = (user.name || 'User').split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
   const avatarEl = $('.profile-avatar');
   if (avatarEl) avatarEl.textContent = initials;
@@ -283,6 +360,7 @@ function configureShell() {
   const profileRole = $('.profile-row span');
   if (profileRole) profileRole.textContent = roleLabel[role] || role;
 
+  // Topbar role chip, quick switch button, logout
   const topActions = $('.topbar-actions');
   if (topActions) {
     let sessionUser = $('.session-user', topActions);
@@ -291,7 +369,11 @@ function configureShell() {
       sessionUser.className = 'session-user';
       topActions.appendChild(sessionUser);
     }
-    sessionUser.innerHTML = `<span class="role-chip">${escapeHTML(roleLabel[role])}</span><button class="logout-button" id="logout-button" data-logout>Log out</button>`;
+    sessionUser.innerHTML = `
+      <span class="role-chip">${escapeHTML(roleLabel[role])}</span>
+      <button class="switch-role-btn" id="topbar-switch-btn" type="button" title="Quick switch to another role">Switch role ⇄</button>
+      <button class="logout-button" id="logout-button" data-logout>Log out</button>
+    `;
   }
 
   let banner = document.querySelector('.backend-banner');
@@ -349,10 +431,13 @@ async function refreshState() {
   }
 }
 
-function setPage(page) {
+function setPage(page, push = true) {
   activePage = page;
   $$('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.page === page));
   $('#current-view-label').textContent = pageTitle(page);
+  if (push && window.location.hash !== `#${page}`) {
+    history.pushState({ page, role: appState?.user?.role }, '', `#${page}`);
+  }
   renderCurrentPage();
 }
 

@@ -20,13 +20,32 @@
           <div class="brand-tagline">Delivering What Matters When It Matters.</div>
         </div>
 
-        <div class="workspace-switcher">
-          <div class="workspace-avatar">MC</div>
+        <div class="workspace-switcher" id="workspace-switcher" role="button" tabindex="0" title="Click to switch role or workspace">
+          <div class="workspace-avatar" id="workspace-avatar">MC</div>
           <div class="workspace-copy">
-            <strong>Metro Civic Network</strong>
-            <span>Operations team</span>
+            <strong id="workspace-title">Metro Civic Network</strong>
+            <span id="workspace-subtitle">Operations team</span>
           </div>
-          <button class="icon-button tiny" aria-label="Switch workspace">⌄</button>
+          <button class="icon-button tiny" id="switcher-toggle-btn" type="button" aria-label="Switch workspace">⌄</button>
+          <div class="switcher-dropdown" id="switcher-dropdown" hidden>
+            <div class="switcher-header">Switch Role / Workspace</div>
+            <button class="switcher-item" type="button" data-switch-role="admin">
+              <i class="role-dot">⌁</i>
+              <div><strong>Administrator</strong><small>Network operations</small></div>
+            </button>
+            <button class="switcher-item" type="button" data-switch-role="donor">
+              <i class="role-dot">＋</i>
+              <div><strong>Donor</strong><small>Aarav Foods (Surplus)</small></div>
+            </button>
+            <button class="switcher-item" type="button" data-switch-role="rider">
+              <i class="role-dot">◌</i>
+              <div><strong>Volunteer Rider</strong><small>Aarav Mehta (Logistics)</small></div>
+            </button>
+            <button class="switcher-item" type="button" data-switch-role="shelter">
+              <i class="role-dot">⌂</i>
+              <div><strong>Receiving Center</strong><small>Night Shelter A (Demand)</small></div>
+            </button>
+          </div>
         </div>
 
         <div class="sidebar-label">Workspace</div>

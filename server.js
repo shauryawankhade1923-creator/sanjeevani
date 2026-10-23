@@ -290,6 +290,18 @@ async function api(req, res, pathname) {
       return send(res, 200, { user: publicProfile(profile), mode: 'local-demo' }, { 'Set-Cookie': `sanjeevani_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400` });
     } catch (error) { return fail(res, 400, error.message); }
   }
+  if (pathname === '/api/auth/switch' && method === 'POST') {
+    try {
+      const input = await body(req);
+      const targetRole = String(input.role || 'admin');
+      const profile = db.profiles.find((item) => item.role === targetRole) || db.profiles[0];
+      const user = db.users.find((item) => item.id === profile.authUserId);
+      const token = createSessionToken(user.id);
+      sessions.set(token, { authUserId: user.id, expiresAt: Date.now() + 1000 * 60 * 60 * 24 });
+      recordEvent('auth.switch', `Switched active role to ${profile.role} (${profile.name})`, user.id);
+      return send(res, 200, { user: publicProfile(profile), mode: 'local-demo', state: stateFor(profile) }, { 'Set-Cookie': `sanjeevani_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400` });
+    } catch (error) { return fail(res, 400, error.message); }
+  }
   if (pathname === '/api/auth/logout' && method === 'POST') return send(res, 200, { ok: true }, { 'Set-Cookie': 'sanjeevani_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0' });
   if (pathname === '/api/me' && method === 'GET') { const user = userFromRequest(req); return user ? send(res, 200, { user: publicProfile(user) }) : fail(res, 401, 'Not signed in'); }
   const user = requireUser(req, res); if (!user) return;
