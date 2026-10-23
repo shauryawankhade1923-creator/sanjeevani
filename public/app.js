@@ -605,7 +605,143 @@ function scenarioView() {
 }
 
 function mapView() {
+  if (appState?.user?.role === 'rider') {
+    return riderMapView();
+  }
   return `<div class="page-toolbar"><div><div class="section-kicker">Simulated Pune / Alandi network</div><h2>Live operations map</h2><p>Seeded coordinates are fictional demo data. Simulated movement is explicitly labelled.</p></div><div class="toolbar-actions"><button class="small-button secondary" data-action="scenario" data-value="movement">Simulate rider movement</button></div></div><div class="map-card"><div class="map-container" id="workspace-map"></div><div class="map-legend"><span class="legend-item"><i class="legend-dot green"></i>Open center</span><span class="legend-item"><i class="legend-dot orange"></i>Attention</span><span class="legend-item"><i class="legend-dot blue"></i>Active rider</span><span>Demo coordinates · OSM attribution</span></div></div>`;
+}
+
+function riderMapView() {
+  const rider = appState.riders.find((r) => r.userId === appState.user.authUserId || r.id === appState.user.entityId) || appState.riders[0] || {};
+  const activeShipment = appState.shipments.find((s) => s.riderId === rider.id && !['delivered', 'cancelled'].includes(s.status));
+
+  let hudHTML = '';
+  if (activeShipment) {
+    const donation = appState.donations.find((d) => d.id === activeShipment.donationId) || { pickupLocation: { name: 'Donor pickup', address: 'Pune' } };
+    const center = appState.centers.find((c) => c.id === activeShipment.centerId) || { name: 'Receiving shelter', address: 'Pune' };
+    const minutes = Math.max(0, Math.round((new Date(activeShipment.etaAt || appState.metrics.simulationNow) - new Date(appState.metrics.simulationNow)) / 60000));
+    const isPickupLeg = ['offered', 'reserved', 'pickup_confirmed'].includes(activeShipment.status);
+    const badgeClass = activeShipment.status === 'in_transit' ? 'transit' : activeShipment.status === 'delayed' ? 'delayed' : activeShipment.status === 'offered' ? 'action' : 'ready';
+    const statusText = activeShipment.status === 'offered' ? '⚠️ Mission Offer Awaiting Confirmation' : activeShipment.status === 'reserved' ? '🛵 Heading to Pickup Point' : activeShipment.status === 'pickup_confirmed' ? '📦 Arrived at Pickup (Loading)' : activeShipment.status === 'picked_up' ? '✓ Cargo Loaded & Secured' : activeShipment.status === 'in_transit' ? '🚚 In Transit to Destination Shelter' : '⚠️ Route Delay Reported';
+
+    hudHTML = `
+      <section class="rider-map-hud">
+        <div class="hud-header">
+          <div class="hud-title-wrap">
+            <span class="hud-badge ${badgeClass}">${statusText}</span>
+            <span class="hud-safe-pill">Safe-use deadline: <strong>${formatTime(activeShipment.safeUntil)}</strong></span>
+          </div>
+          <div class="hud-telemetry">
+            <span>Estimated remaining: <strong>${minutes} min</strong></span>
+            <span>Mode: <strong>Active Mission Navigation</strong></span>
+          </div>
+        </div>
+        <div class="hud-route-grid">
+          <div class="hud-step-card">
+            <div class="hud-step-icon pickup">📦</div>
+            <div class="hud-step-info">
+              <strong>Step 1: ${escapeHTML(donation.pickupLocation?.name || 'Pickup')}</strong>
+              <span>${escapeHTML(donation.pickupLocation?.address || 'Pickup address')}</span>
+              <span class="hud-tag ${isPickupLeg ? 'active' : 'done'}">${isPickupLeg ? 'Current Target' : 'Collected ✓'}</span>
+            </div>
+          </div>
+          <div class="hud-step-card">
+            <div class="hud-step-icon dest">🏥</div>
+            <div class="hud-step-info">
+              <strong>Step 2: ${escapeHTML(center.name || 'Dropoff')}</strong>
+              <span>${escapeHTML(center.address || 'Receiving center')}</span>
+              <span class="hud-tag ${!isPickupLeg ? 'active' : 'pending'}">${!isPickupLeg ? 'Current Target' : 'Pending Dropoff'}</span>
+            </div>
+          </div>
+          <div class="hud-step-card">
+            <div class="hud-step-icon cargo">🍱</div>
+            <div class="hud-step-info">
+              <strong>Cargo: ${formatNumber(activeShipment.quantity)} ${escapeHTML(activeShipment.unit)}</strong>
+              <span>${escapeHTML(donation.category || 'Surplus')} · ${escapeHTML(donation.storage || 'Standard care')}</span>
+              <span class="hud-tag done">Verified Safe</span>
+            </div>
+          </div>
+        </div>
+        <div class="hud-actions-bar">
+          <div class="hud-telemetry">
+            <span>Rider GPS: <strong>${rider.lat?.toFixed(3)}, ${rider.lng?.toFixed(3)}</strong></span>
+            <span>Vehicle: <strong>${escapeHTML(rider.vehicle || 'Scooter')}</strong></span>
+          </div>
+          <div class="hud-action-btns">
+            <button class="small-button secondary" data-action="rider-center-map" title="Focus map on my GPS location">🎯 Center on me</button>
+            <button class="small-button primary" data-action="rider-step-gps" title="Advance GPS position along the route">⚡ Step GPS along route</button>
+            ${riderMapActionButtons(activeShipment)}
+          </div>
+        </div>
+      </section>
+    `;
+  } else {
+    hudHTML = `
+      <section class="rider-map-hud">
+        <div class="hud-header">
+          <div class="hud-title-wrap">
+            <span class="hud-badge ${rider.availability === 'available' ? 'transit' : 'ready'}">
+              ${rider.availability === 'available' ? '🟢 Online & Ready for Dispatch' : '⚪ Standby / Offline'}
+            </span>
+            <span class="hud-safe-pill">Vehicle: <strong>${escapeHTML(rider.vehicle || 'Scooter')}</strong></span>
+            <span class="hud-safe-pill">Free capacity: <strong>${(rider.capacity || 40) - (rider.capacityReserved || 0)} / ${rider.capacity || 40} units</strong></span>
+          </div>
+          <div class="hud-action-btns">
+            <button class="small-button secondary" data-action="rider-center-map">🎯 Center on me</button>
+            <button class="small-button secondary" data-action="rider-gps-patrol">🛵 Advance GPS Patrol</button>
+            <button class="small-button primary" data-action="rider-toggle-avail" data-value="${rider.availability === 'available' ? 'offline' : 'available'}">
+              ${rider.availability === 'available' ? 'Go Offline' : 'Go Online'}
+            </button>
+          </div>
+        </div>
+        <p style="margin: 0; font-size: 11px; color: #7f8c82;">
+          You currently have no assigned delivery in transit. Waiting for urgent surplus allocations matching your vehicle capacity in Pune.
+        </p>
+      </section>
+    `;
+  }
+
+  return `
+    <div class="page-toolbar">
+      <div>
+        <div class="section-kicker">Volunteer Navigation Terminal</div>
+        <h2>Rider GPS & Route Map</h2>
+        <p>Interactive turn-by-turn route, live simulated GPS beacon, and mission telemetry.</p>
+      </div>
+      <div class="toolbar-actions">
+        <button class="small-button secondary" data-action="refresh">Refresh state</button>
+      </div>
+    </div>
+    ${hudHTML}
+    <div class="map-card">
+      <div class="map-container" id="workspace-map"></div>
+      <div class="map-legend">
+        <span class="legend-item"><i class="legend-dot green"></i>You (Rider GPS)</span>
+        <span class="legend-item"><i class="legend-dot orange"></i>Pickup Location</span>
+        <span class="legend-item"><i class="legend-dot blue"></i>Destination Shelter</span>
+        <span class="legend-item" style="margin-left:auto; color: #407548; font-weight: 700;">⚡ Animated Line: Active Route Leg</span>
+      </div>
+    </div>
+  `;
+}
+
+function riderMapActionButtons(shipment) {
+  if (shipment.status === 'offered') {
+    return `<button class="small-button primary" data-action="shipment-action" data-id="${shipment.id}" data-value="accept">Accept mission</button><button class="small-button danger" data-action="shipment-action" data-id="${shipment.id}" data-value="reject">Decline</button>`;
+  }
+  if (shipment.status === 'reserved') {
+    return `<button class="small-button primary" data-action="shipment-action" data-id="${shipment.id}" data-value="pickup-arrived">Arrived at pickup</button>`;
+  }
+  if (shipment.status === 'pickup_confirmed') {
+    return `<button class="small-button primary" data-action="shipment-action" data-id="${shipment.id}" data-value="picked-up">Confirm cargo loaded</button>`;
+  }
+  if (shipment.status === 'picked_up') {
+    return `<button class="small-button primary" data-action="shipment-action" data-id="${shipment.id}" data-value="in-transit">Begin trip to shelter</button>`;
+  }
+  if (['in_transit', 'delayed'].includes(shipment.status)) {
+    return `<button class="small-button danger" data-action="shipment-action" data-id="${shipment.id}" data-value="report-delay">Report delay (+15m)</button>`;
+  }
+  return '';
 }
 
 function renderMap(containerId) {
@@ -625,10 +761,124 @@ function renderMap(containerId) {
     container._leaflet_id = null;
   }
   container.innerHTML = '';
-  const map = L.map(container).setView([18.588, 73.899], 13);
+
+  const isRider = appState?.user?.role === 'rider';
+  const rider = isRider ? (appState.riders.find((r) => r.userId === appState.user.authUserId || r.id === appState.user.entityId) || appState.riders[0]) : null;
+  const initialCenter = (rider && rider.lat && rider.lng) ? [rider.lat, rider.lng] : [18.588, 73.899];
+
+  const map = L.map(container).setView(initialCenter, 13);
   activeLeafletMap = map;
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
   const bounds = [];
+
+  if (isRider && rider) {
+    const activeShipment = appState.shipments.find((s) => s.riderId === rider.id && !['delivered', 'cancelled'].includes(s.status));
+    const donation = activeShipment ? appState.donations.find((d) => d.id === activeShipment.donationId) : null;
+    const center = activeShipment ? appState.centers.find((c) => c.id === activeShipment.centerId) : null;
+
+    // Custom Rider GPS Marker with glowing pulsating radar
+    const riderMarker = L.marker([rider.lat, rider.lng], {
+      icon: L.divIcon({
+        className: 'custom-leaflet-icon',
+        html: `<div class="rider-marker-pin"><div class="rider-pulse"></div><div class="rider-icon-inner">🛵</div><span class="rider-marker-label">You (${escapeHTML(rider.name)})</span></div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      }),
+      zIndexOffset: 1000
+    }).addTo(map);
+    riderMarker.bindPopup(`<strong>🛵 You (${escapeHTML(rider.name)})</strong><br />Availability: ${escapeHTML(rider.availability)}<br />Vehicle: ${escapeHTML(rider.vehicle)}<br /><em>Simulated GPS Active</em>`);
+    bounds.push([rider.lat, rider.lng]);
+
+    // Active Mission Pickup & Destination
+    if (donation?.pickupLocation?.lat && donation?.pickupLocation?.lng) {
+      const pLat = donation.pickupLocation.lat;
+      const pLng = donation.pickupLocation.lng;
+      const pickupMarker = L.marker([pLat, pLng], {
+        icon: L.divIcon({
+          className: 'custom-leaflet-icon',
+          html: `<div class="pickup-marker-pin"><div class="pin-badge">📦</div><span class="pin-label">${escapeHTML(donation.pickupLocation.name)}</span></div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        }),
+        zIndexOffset: 800
+      }).addTo(map);
+      pickupMarker.bindPopup(`<strong>📦 Pickup: ${escapeHTML(donation.pickupLocation.name)}</strong><br />${escapeHTML(donation.pickupLocation.address || '')}<br />Quantity: ${formatNumber(activeShipment.quantity)} ${escapeHTML(activeShipment.unit)}<br />Safe until: ${formatTime(activeShipment.safeUntil)}`);
+      bounds.push([pLat, pLng]);
+    }
+
+    if (center?.lat && center?.lng) {
+      const destMarker = L.marker([center.lat, center.lng], {
+        icon: L.divIcon({
+          className: 'custom-leaflet-icon',
+          html: `<div class="dest-marker-pin"><div class="pin-badge">🏥</div><span class="pin-label">${escapeHTML(center.name)}</span></div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        }),
+        zIndexOffset: 800
+      }).addTo(map);
+      destMarker.bindPopup(`<strong>🏥 Destination: ${escapeHTML(center.name)}</strong><br />${escapeHTML(center.address || '')}<br />Receiving hours: ${escapeHTML(center.receivingHours || 'Open')}`);
+      bounds.push([center.lat, center.lng]);
+    }
+
+    // Dynamic Turn-by-Turn Route Polylines
+    if (activeShipment && donation?.pickupLocation?.lat && center?.lat) {
+      const riderPos = [rider.lat, rider.lng];
+      const pickupPos = [donation.pickupLocation.lat, donation.pickupLocation.lng];
+      const centerPos = [center.lat, center.lng];
+      const isHeadingToPickup = ['offered', 'reserved', 'pickup_confirmed'].includes(activeShipment.status);
+
+      if (isHeadingToPickup) {
+        // Active Leg: Rider -> Pickup (vibrant animated dashed emerald)
+        L.polyline([riderPos, pickupPos], {
+          color: '#257849',
+          weight: 6,
+          opacity: 0.95,
+          dashArray: '10, 8'
+        }).addTo(map);
+        // Upcoming Leg: Pickup -> Center (muted dotted line)
+        L.polyline([pickupPos, centerPos], {
+          color: '#849087',
+          weight: 3.5,
+          opacity: 0.65,
+          dashArray: '5, 7'
+        }).addTo(map);
+      } else {
+        // Completed Leg: Pickup -> Rider (subtle solid line)
+        L.polyline([pickupPos, riderPos], {
+          color: '#75b75a',
+          weight: 3.5,
+          opacity: 0.75
+        }).addTo(map);
+        // Active Leg: Rider -> Center (vibrant animated dashed emerald)
+        L.polyline([riderPos, centerPos], {
+          color: '#257849',
+          weight: 6,
+          opacity: 0.95,
+          dashArray: '10, 8'
+        }).addTo(map);
+      }
+    }
+
+    // Background centers for neighborhood context
+    appState.centers.forEach((c) => {
+      if (center && c.id === center.id) return;
+      const marker = L.circleMarker([c.lat, c.lng], {
+        radius: 6,
+        color: c.isOpen ? '#75b75a' : '#b8684f',
+        fillColor: c.isOpen ? '#90c96b' : '#e58f72',
+        fillOpacity: 0.6,
+        weight: 1
+      }).addTo(map);
+      marker.bindPopup(`<strong>${escapeHTML(c.name)}</strong><br />${c.isOpen ? 'Open center' : 'Closed'}`);
+    });
+
+    if (bounds.length) {
+      map.fitBounds(bounds, { padding: [55, 55], maxZoom: 15 });
+    }
+    return;
+  }
+
+  // Generic Operations Map for Admin, Donor, Shelter
   appState.centers.forEach((center) => {
     const marker = L.circleMarker([center.lat, center.lng], {
       radius: 8,
@@ -639,15 +889,15 @@ function renderMap(containerId) {
     marker.bindPopup(`<strong>${escapeHTML(center.name)}</strong><br />${center.isOpen ? 'Open' : 'Closed'} · ${center.occupancy}/${center.capacity} occupied`);
     bounds.push([center.lat, center.lng]);
   });
-  appState.riders.forEach((rider) => {
-    const marker = L.circleMarker([rider.lat, rider.lng], {
+  appState.riders.forEach((r) => {
+    const marker = L.circleMarker([r.lat, r.lng], {
       radius: 6,
       color: '#4c8f96',
       fillColor: '#85c1c2',
       fillOpacity: 0.95
     }).addTo(map);
-    marker.bindPopup(`<strong>${escapeHTML(rider.name)}</strong><br />${escapeHTML(rider.availability)} · ${escapeHTML(rider.vehicle)}<br /><em>Simulated demo location</em>`);
-    bounds.push([rider.lat, rider.lng]);
+    marker.bindPopup(`<strong>${escapeHTML(r.name)}</strong><br />${escapeHTML(r.availability)} · ${escapeHTML(r.vehicle)}<br /><em>Simulated demo location</em>`);
+    bounds.push([r.lat, r.lng]);
   });
   appState.donations.forEach((donation) => {
     if (donation.pickupLocation?.lat && donation.pickupLocation?.lng) {
@@ -656,7 +906,7 @@ function renderMap(containerId) {
       bounds.push([donation.pickupLocation.lat, donation.pickupLocation.lng]);
     }
   });
-  if (bounds.length) map.fitBounds(bounds, { padding: [20, 20] });
+  if (bounds.length) map.fitBounds(bounds, { padding: [25, 25] });
 }
 
 function bindDynamicPage() {
@@ -714,6 +964,80 @@ async function handleAction(action, entityId, value) {
     return;
   }
   if (action === 'donation-open') return showToast('Donation details are visible in the dispatch queue and audit log');
+  if (action === 'rider-step-gps') {
+    const rider = appState.riders.find((r) => r.userId === appState.user.authUserId || r.id === appState.user.entityId) || appState.riders[0];
+    const activeShipment = appState.shipments.find((s) => s.riderId === rider?.id && !['delivered', 'cancelled'].includes(s.status));
+    if (!activeShipment) {
+      showToast('No active trip in progress to advance along.');
+      return;
+    }
+    const donation = appState.donations.find((d) => d.id === activeShipment.donationId);
+    const center = appState.centers.find((c) => c.id === activeShipment.centerId);
+    const isPickupLeg = ['offered', 'reserved', 'pickup_confirmed'].includes(activeShipment.status);
+    const target = isPickupLeg ? donation?.pickupLocation : center;
+    if (!target || target.lat === undefined || target.lng === undefined) {
+      showToast('Destination waypoint coordinates not available.');
+      return;
+    }
+
+    const currentLat = rider.lat || 18.579;
+    const currentLng = rider.lng || 73.895;
+    const nextLat = currentLat + (target.lat - currentLat) * 0.35;
+    const nextLng = currentLng + (target.lng - currentLng) * 0.35;
+    const distKm = Math.hypot(target.lat - nextLat, target.lng - nextLng) * 111;
+
+    const result = await api('/api/riders/me', {
+      method: 'POST',
+      body: JSON.stringify({ lat: nextLat, lng: nextLng })
+    });
+    if (result) {
+      appState = result.state;
+      renderCurrentPage();
+      if (distKm < 0.25) {
+        showToast(`🎯 Arrived near ${target.name || 'destination'}! Ready for next step.`);
+      } else {
+        showToast(`📍 GPS stepped along route (~${(distKm * 1000).toFixed(0)}m remaining)`);
+      }
+    }
+    return;
+  }
+  if (action === 'rider-gps-patrol') {
+    const rider = appState.riders.find((r) => r.userId === appState.user.authUserId || r.id === appState.user.entityId) || appState.riders[0];
+    const currentLat = rider.lat || 18.579;
+    const currentLng = rider.lng || 73.895;
+    const nextLat = currentLat + (Math.random() > 0.5 ? 0.002 : -0.002);
+    const nextLng = currentLng + (Math.random() > 0.5 ? 0.002 : -0.002);
+    const result = await api('/api/riders/me', {
+      method: 'POST',
+      body: JSON.stringify({ lat: nextLat, lng: nextLng })
+    });
+    if (result) {
+      appState = result.state;
+      renderCurrentPage();
+      showToast('Simulated patrol GPS updated');
+    }
+    return;
+  }
+  if (action === 'rider-center-map') {
+    const rider = appState.riders.find((r) => r.userId === appState.user.authUserId || r.id === appState.user.entityId) || appState.riders[0];
+    if (activeLeafletMap && rider?.lat && rider?.lng) {
+      activeLeafletMap.flyTo([rider.lat, rider.lng], 15, { duration: 0.8 });
+      showToast('Centered on your live GPS beacon');
+    }
+    return;
+  }
+  if (action === 'rider-toggle-avail') {
+    const result = await api('/api/riders/me', {
+      method: 'POST',
+      body: JSON.stringify({ availability: value })
+    });
+    if (result) {
+      appState = result.state;
+      renderCurrentPage();
+      showToast(`Rider availability updated: ${value}`);
+    }
+    return;
+  }
 }
 
 async function handleScenario(scenario) {
